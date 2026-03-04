@@ -8,6 +8,9 @@ const toastTitle = document.getElementById("toastTitle");
 const toastText = document.getElementById("toastText");
 const toastIconL = document.getElementById("toastIconL");
 const toastIconR = document.getElementById("toastIconR");
+const timerHud = document.getElementById("timerHud");
+const timerLabel = document.getElementById("timerLabel");
+const timerValue = document.getElementById("timerValue");
 
 let toastTimer = null;
 function showToast({ title = "알림", text = "", ms = 1400, icon = "🔔" } = {}) {
@@ -63,20 +66,48 @@ function setAff(v) {
   // ✅ 상시 표시 안 함
 }
 
+function formatMMSS(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const mm = String(Math.floor(s / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
+function showTimerHud(labelText) {
+  if (!timerHud) return;
+  timerHud.classList.remove("hidden");
+  if (timerLabel) timerLabel.textContent = labelText || "제한 시간";
+}
+
+function hideTimerHud() {
+  if (!timerHud) return;
+  timerHud.classList.add("hidden");
+}
+
+function updateTimerHud() {
+  if (!timerValue) return;
+  timerValue.textContent = formatMMSS(state.timer.secondsLeft);
+}
+
 function startTimer(seconds, label) {
   state.timer.active = true;
   state.timer.secondsLeft = seconds;
   state.timer.label = label || "제한 시간";
-  updateTimerUI();
-}
-function updateTimerUI() {
-  if (!state.timer.active) { timerEl.textContent = ""; return; }
-  const s = Math.max(0, state.timer.secondsLeft);
-  const mm = String(Math.floor(s / 60)).padStart(2, "0");
-  const ss = String(s % 60).padStart(2, "0");
-  timerEl.textContent = `${state.timer.label}: ${mm}:${ss}`;
-}
 
+  // ✅ 1) 토스트로 3초 공지
+  showToast({
+    title: "알림",
+    icon: "🔔",
+    text: `제한 시간 ${formatMMSS(seconds)}`,
+    ms: 3000
+  });
+
+  // ✅ 2) 토스트가 끝나면 HUD 표시
+  setTimeout(() => {
+    showTimerHud(state.timer.label);
+    updateTimerHud();
+  }, 3000);
+}
 // ========= Script Engine =========
 let scripts = null;
 let running = null; // { list, i }
@@ -391,12 +422,16 @@ function create() {
     loop: true,
     callback: () => {
       if (!state.timer.active) return;
+
       state.timer.secondsLeft -= 1;
-      updateTimerUI();
       if (state.timer.secondsLeft <= 0) {
         state.timer.secondsLeft = 0;
-        updateTimerUI();
+        state.timer.active = false;
+        updateTimerHud();
+        // TODO: 시간 종료 페널티/배드엔딩 처리
+        return;
       }
+      updateTimerHud();
     }
   });
 
@@ -464,22 +499,14 @@ function update() {
 
 // ===== 연애 지상주의 구역(거리 토스트 + 진입 토스트) =====
 const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
-
-// 진입 반경(현재 160px = 5m 느낌)
 const ZONE_RADIUS_PX = 160;
-
-// 1m 환산(타일 32px 기준)
 const PX_PER_M = 32;
-
-// LoveZone 진입 여부
 const inLoveZone = dist <= ZONE_RADIUS_PX;
 
-// (1) "…까지 Xm" 거리 토스트: 존 바깥에서만, 숫자 바뀔 때만
 if (!inLoveZone) {
   const remainingPx = Math.max(0, dist - ZONE_RADIUS_PX);
   const meters = Math.max(1, Math.ceil(remainingPx / PX_PER_M));
 
-  // 너무 자주 뜨지 않게(최소 간격 450ms)
   const now = Date.now();
   const canToast = now - state.lastZoneDistanceToastAt > 450;
 
@@ -495,15 +522,12 @@ if (!inLoveZone) {
     });
   }
 } else {
-  // 존 안에 들어오면 거리 표시 리셋(다시 나갔다 들어올 때 자연스럽게)
   state.lastZoneMeters = null;
 }
 
-// (2) 존 "처음 진입" 토스트는 100% 1번
 if (inLoveZone && !state.seenLoveZoneIntro) {
   state.seenLoveZoneIntro = true;
   lastZoneToastAt = Date.now();
-
   showToast({
     title: "알림",
     icon: "🔔",
@@ -512,7 +536,6 @@ if (inLoveZone && !state.seenLoveZoneIntro) {
   });
 }
 
-// (3) 존 안에서는 가끔 다시 뜨는 확률 토스트(선택)
 if (inLoveZone) {
   const now = Date.now();
   if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
@@ -526,27 +549,6 @@ if (inLoveZone) {
   }
 }
 
-  // ✅ 첫 진입은 무조건 1번 뜸
-  if (!state.seenLoveZoneIntro) {
-    state.seenLoveZoneIntro = true;
-    lastZoneToastAt = now;
-
-    boxTitle.textContent = "(알림)";
-    boxText.textContent = "연애 지상주의 구역이 활성화되었습니다.";
-    boxChoices.innerHTML = "";
-    openBox();
-    setTimeout(() => { if (boxChoices.childElementCount === 0) closeBox(); }, 1200);
-  }
-  // 이후에는 확률 + 쿨다운
-  else if (now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
-    lastZoneToastAt = now;
-
-    boxTitle.textContent = "(알림)";
-    boxText.textContent = "연애 지상주의 구역이 활성화되었습니다.";
-    boxChoices.innerHTML = "";
-    openBox();
-    setTimeout(() => { if (boxChoices.childElementCount === 0) closeBox(); }, 1200);
-  }
 }
 
   // 차여운 근처 상호작용: 세계개변
