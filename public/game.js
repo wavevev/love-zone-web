@@ -188,16 +188,16 @@ async function create() {
   g.generateTexture("wall", 32, 32);
   g.clear();
 
-  // player
-  g.fillStyle(0xffffff, 1);
-  g.fillRoundedRect(0, 0, 22, 22, 6);
-  g.generateTexture("player", 22, 22);
+// player (잘 보이게 초록 + 크게)
+g.fillStyle(0x00ff66, 1);
+g.fillRoundedRect(0, 0, 30, 30, 8);
+g.generateTexture("player", 30, 30);
   g.clear();
 
-  // cha(차여운)
-  g.fillStyle(0x9ca3af, 1);
-  g.fillRoundedRect(0, 0, 22, 22, 6);
-  g.generateTexture("cha", 22, 22);
+// cha(차여운) (빨강)
+g.fillStyle(0xff3355, 1);
+g.fillRoundedRect(0, 0, 30, 30, 8);
+g.generateTexture("cha", 30, 30);
   g.destroy();
 
   // === 월드 ===
@@ -235,7 +235,7 @@ async function create() {
   // === 플레이어 ===
   player = this.physics.add.sprite(420, 360, "player");
   player.setCollideWorldBounds(true);
-  player.body.setSize(18, 18, true);
+  player.body.setSize(26, 26, true);
 
   // === 차여운(일단 옥상에 배치: 에피1 초반 마지막) ===
   cha = this.physics.add.staticSprite(1850, 250, "cha");
