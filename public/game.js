@@ -188,17 +188,21 @@ async function create() {
   g.generateTexture("wall", 32, 32);
   g.clear();
 
-// player (잘 보이게 초록 + 크게)
+// player (형광 초록 + 테두리)
 g.fillStyle(0x00ff66, 1);
 g.fillRoundedRect(0, 0, 30, 30, 8);
+g.lineStyle(3, 0x000000, 1);
+g.strokeRoundedRect(1, 1, 28, 28, 8);
 g.generateTexture("player", 30, 30);
-  g.clear();
+g.clear();
 
-// cha(차여운) (빨강)
-g.fillStyle(0xff3355, 1);
+// cha(차여운) (형광 핑크 + 테두리)
+g.fillStyle(0xff2d9b, 1);
 g.fillRoundedRect(0, 0, 30, 30, 8);
+g.lineStyle(3, 0x000000, 1);
+g.strokeRoundedRect(1, 1, 28, 28, 8);
 g.generateTexture("cha", 30, 30);
-  g.destroy();
+g.clear();
 
   // === 월드 ===
   const worldW = 2200;
@@ -237,6 +241,21 @@ g.generateTexture("cha", 30, 30);
   player.setCollideWorldBounds(true);
   player.body.setSize(26, 26, true);
 
+  // 디버그용: 플레이어 이름표 (무조건 보이게)
+const nameTag = this.add.text(player.x - 14, player.y - 42, "명하", {
+  fontSize: "16px",
+  color: "#00ff66",
+  backgroundColor: "#000000",
+  padding: { x: 4, y: 2 }
+});
+nameTag.setDepth(9999);
+player.setDepth(9999);
+
+// 매 프레임 따라다니게
+this.events.on("postupdate", () => {
+  nameTag.setPosition(player.x - 14, player.y - 42);
+});
+
   // === 차여운(일단 옥상에 배치: 에피1 초반 마지막) ===
   cha = this.physics.add.staticSprite(1850, 250, "cha");
 
@@ -245,6 +264,7 @@ g.generateTexture("cha", 30, 30);
 
   // 카메라
   this.cameras.main.startFollow(player);
+  this.cameras.main.setZoom(2);
   this.cameras.main.setBounds(0, 0, worldW, worldH);
   this.physics.world.setBounds(0, 0, worldW, worldH);
 
