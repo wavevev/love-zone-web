@@ -1,63 +1,175 @@
+/* ===== 둥근모 폰트 로컬 로드 ===== */
+@font-face{
+  font-family:"DungGeunMo";
+  src:
+    url("./fonts/DungGeunMo.woff2") format("woff2"),
+    url("./fonts/DungGeunMo.woff") format("woff");
+  font-display: swap;
+}
+
+:root{
+  --bg:#0b0b0f;
+  --panel: rgba(12, 14, 20, 0.86);
+  --panel2: rgba(12, 14, 20, 0.92);
+  --line: rgba(255,255,255,0.18);
+  --line2: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.94);
+  --muted: rgba(255,255,255,0.70);
+  --glow: rgba(120, 220, 255, 0.22);
+  --pixel: 2px;
+}
+
+*{ box-sizing:border-box; }
+
 body{
   margin:0;
-  background:#0b0b0f;
-  color:#fff;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "DungGeunMo", system-ui, -apple-system, sans-serif;
 
-  /* ✅ 화면 중앙 정렬 */
+  /* 가운데 + 비율유지(FIT) */
   display:flex;
   justify-content:center;
   align-items:center;
-
   width:100vw;
   height:100vh;
   overflow:hidden;
 }
 
 #game{
-  /* Phaser가 캔버스를 여기 안에 만들어줌 */
   width:100vw;
   height:100vh;
 }
 
-/* HUD/대화창은 화면 기준으로 고정이라 그대로 OK */
-
-#hud{
-  position: fixed;
-  top: 12px; left: 12px;
-  background: rgba(10,12,18,0.75);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 10px 12px;
-  min-width: 200px;
+/* Phaser 캔버스 픽셀 느낌 */
+canvas{
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
-.hud-line{ font-weight:700; }
-.hud-sub{ margin-top:6px; font-size:12px; opacity:0.85; }
 
-#box{
+/* ===== 토스트(알림창) : 참고 이미지 느낌 ===== */
+.toast{
+  position: fixed;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 32px));
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.hidden{ display:none; }
+
+.toast-inner{
+  background: rgba(120, 180, 255, 0.10);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.40),
+    0 0 0 1px rgba(0,0,0,0.35) inset;
+  border-radius: 10px;
+
+  /* 픽셀/쯔꾸르 느낌: 딱딱한 라인 */
+  outline: var(--pixel) solid rgba(0,0,0,0.55);
+  outline-offset: -6px;
+
+  padding: 12px 14px;
+}
+
+.toast-top{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap: 10px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.toast-icon{
+  opacity: 0.85;
+  filter: drop-shadow(0 0 8px var(--glow));
+}
+
+.toast-title{
+  font-size: 16px;
+}
+
+.toast-line{
+  height:1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent);
+  margin: 10px 0 10px;
+}
+
+.toast-text{
+  text-align:center;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ===== 대화창 ===== */
+.dialog{
   position: fixed;
   left: 50%;
   bottom: 18px;
   transform: translateX(-50%);
-  width: min(980px, calc(100vw - 32px));
-  background: rgba(10,12,18,0.92);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 12px;
-  padding: 14px 16px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  width: min(980px, calc(100vw - 28px));
+  z-index: 9000;
 }
-.hidden { display:none; }
 
-#boxTitle{ font-weight:800; margin-bottom: 8px; }
-#boxText{ line-height: 1.55; white-space: pre-wrap; min-height: 62px; }
-#boxChoices{ display:flex; flex-wrap:wrap; gap:8px; margin-top: 12px; }
+.dialog-frame{
+  background: var(--panel2);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 14px 48px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.40) inset;
+  border-radius: 10px;
+
+  /* 쯔꾸르 감성 “픽셀 테두리” 느낌 */
+  outline: var(--pixel) solid rgba(0,0,0,0.7);
+  outline-offset: -6px;
+
+  padding: 14px 16px 12px;
+}
+
+.dialog-title{
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.dialog-text{
+  font-size: 16px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  min-height: 70px;
+}
+
+.dialog-choices{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 .choice{
   cursor:pointer;
+  user-select:none;
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.14);
-  user-select:none;
+  color: var(--text);
+  pointer-events: auto;
 }
-.choice:hover{ background: rgba(255,255,255,0.10); }
-#boxHint{ margin-top: 10px; font-size: 12px; opacity: 0.7; }
+
+.choice:hover{
+  background: rgba(255,255,255,0.10);
+}
+
+.dialog-hint{
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+}

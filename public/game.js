@@ -3,6 +3,21 @@ const box = document.getElementById("box");
 const boxTitle = document.getElementById("boxTitle");
 const boxText = document.getElementById("boxText");
 const boxChoices = document.getElementById("boxChoices");
+const toast = document.getElementById("toast");
+const toastTitle = document.getElementById("toastTitle");
+const toastText = document.getElementById("toastText");
+
+let toastTimer = null;
+function showToast({ title = "알림", text = "", ms = 1400 } = {}) {
+  toastTitle.textContent = title;
+  toastText.textContent = text;
+
+  toast.classList.remove("hidden");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, ms);
+}
 
 const affEl = document.getElementById("aff");
 const zoneStateEl = document.getElementById("zoneState");
@@ -44,7 +59,7 @@ const state = {
 
 function setAff(v) {
   state.affection = v;
-  affEl.textContent = String(v);
+  // ✅ 상시 표시 안 함
 }
 
 function startTimer(seconds, label) {
@@ -132,12 +147,20 @@ function handleCmd(cmd) {
     return;
   }
 
-  if (cmd.type === "setAffection") {
-    setAff(cmd.value);
-    locked = false;
-    step();
-    return;
-  }
+ if (cmd.type === "setAffection") {
+  setAff(cmd.value);
+
+  // ✅ 호감도는 토스트로만 표시
+  showToast({
+    title: "호감도",
+    text: `차여운의 호감도를 계산합니다.\n${cmd.value >= 0 ? "+" : ""}${cmd.value}`,
+    ms: 1600
+  });
+
+  locked = false;
+  step();
+  return;
+}
 
   if (cmd.type === "setTimer") {
     startTimer(cmd.seconds || 0, cmd.label || "제한 시간");
@@ -372,7 +395,6 @@ function create() {
 
   // 초기 UI
   setAff(state.affection);
-  zoneStateEl.textContent = "연애 지상주의 구역: OFF";
   updateTimerUI();
 
   // 시작 스크립트
@@ -434,13 +456,29 @@ function update() {
   }
 
   // 연애 지상주의 구역(차여운 반경)
-  const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
-  const inLoveZone = dist <= 160;
-  state.loveZone = inLoveZone;
-  zoneStateEl.textContent = inLoveZone ? "연애 지상주의 구역: ON" : "연애 지상주의 구역: OFF";
+const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
+const inLoveZone = dist <= 160;
 
-  if (inLoveZone) {
+if (inLoveZone && !state.seenLoveZoneIntro) {
+  state.seenLoveZoneIntro = true;
+  showToast({
+    title: "알림",
+    text: "연애 지상주의 구역이 활성화되었습니다.",
+    ms: 1400
+  });
+}
+
+if (inLoveZone) {
   const now = Date.now();
+  if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
+    lastZoneToastAt = now;
+    showToast({
+      title: "알림",
+      text: "연애 지상주의 구역이 활성화되었습니다.",
+      ms: 1200
+    });
+  }
+}
 
   // ✅ 첫 진입은 무조건 1번 뜸
   if (!state.seenLoveZoneIntro) {
@@ -469,4 +507,3 @@ function update() {
   if (Phaser.Input.Keyboard.JustDown(interactKey)) {
     if (dist <= 80) runScript("world_change");
   }
-}
