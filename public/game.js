@@ -32,6 +32,10 @@ let spawnPoints = {
   rooftop: { x: 1850, y: 250 }
 };
 
+let npcs = [];
+let interactHint = null;
+let lastNpcInteractAt = 0;
+
 function openBox() { box.classList.remove("hidden"); }
 function closeBox() {
   box.classList.add("hidden");
@@ -345,6 +349,46 @@ function create() {
   g.generateTexture("cha", 30, 30);
   g.destroy();
 
+  // npc (하늘색)
+g.fillStyle(0x7bd3ff, 1);
+g.fillRoundedRect(0, 0, 30, 30, 8);
+g.lineStyle(3, 0x000000, 1);
+g.strokeRoundedRect(1, 1, 28, 28, 8);
+g.generateTexture("npc", 30, 30);
+g.destroy();
+
+// ===== NPC 배치(추후 데이터로 늘리면 됨) =====
+function addNpc(x, y, name, scriptKey) {
+  const s = currentScene.physics.add.staticSprite(x, y, "npc");
+  s.setDepth(9999);
+  const tag = currentScene.add.text(x - 20, y - 42, name, {
+    fontSize: "16px",
+    color: "#ffffff",
+    backgroundColor: "#000000",
+    padding: { x: 4, y: 2 }
+  }).setDepth(9999);
+
+  npcs.push({ sprite: s, tag, name, scriptKey });
+}
+
+addNpc(520, 360, "안경훈", "talk_kyunghoon");
+addNpc(640, 360, "천상원", "talk_cheonsangwon");
+
+// 라벨 따라가기(고정 스프라이트라 위치 고정이지만 안전하게)
+this.events.on("postupdate", () => {
+  for (const n of npcs) n.tag.setPosition(n.sprite.x - 20, n.sprite.y - 42);
+});
+
+interactHint = this.add.text(0, 0, "SPACE: 대화", {
+  fontSize: "16px",
+  color: "#ffffff",
+  backgroundColor: "#000000",
+  padding: { x: 6, y: 4 }
+}).setDepth(99999);
+interactHint.setVisible(false);
+interactHint.setScrollFactor(0); // 화면 고정
+interactHint.setPosition(20, 20);
+
   // === 월드 ===
   const worldW = 2200;
   const worldH = 1400;
@@ -553,9 +597,40 @@ function update() {
     }
   }
 
+// ===== NPC 상호작용(가까우면 힌트 표시) =====
+let nearestNpc = null;
+let nearestDist = Infinity;
+
+for (const n of npcs) {
+  const d = Phaser.Math.Distance.Between(player.x, player.y, n.sprite.x, n.sprite.y);
+  if (d < nearestDist) { nearestDist = d; nearestNpc = n; }
+}
+
+const CAN_TALK_DIST = 90;
+if (nearestNpc && nearestDist <= CAN_TALK_DIST) {
+  interactHint.setVisible(true);
+  interactHint.setText("SPACE: 대화");
+} else {
+  interactHint.setVisible(false);
+}
+
   // 차여운 근처 상호작용: 세계개변
   if (Phaser.Input.Keyboard.JustDown(interactKey)) {
-    if (dist <= 80) runScript("world_change");
+  const now = Date.now();
+  if (now - lastNpcInteractAt < 250) return; // 더블 입력 방지
+
+  // 1) NPC 대화 우선
+  if (nearestNpc && nearestDist <= CAN_TALK_DIST) {
+    lastNpcInteractAt = now;
+    runScript(nearestNpc.scriptKey);
+    return;
   }
+
+  // 2) 차여운 근처면 세계개변
+  if (dist <= 80) {
+    runScript("world_change");
+    return;
+  }
+}
 }
   
