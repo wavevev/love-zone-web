@@ -1,5 +1,26 @@
-body { margin:0; background:#0b0b0f; color:#fff; font-family: system-ui, -apple-system, sans-serif; }
-#game { width:100vw; height:100vh; }
+body{
+  margin:0;
+  background:#0b0b0f;
+  color:#fff;
+  font-family: system-ui, -apple-system, sans-serif;
+
+  /* ✅ 화면 중앙 정렬 */
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
+
+#game{
+  /* Phaser가 캔버스를 여기 안에 만들어줌 */
+  width:100vw;
+  height:100vh;
+}
+
+/* HUD/대화창은 화면 기준으로 고정이라 그대로 OK */
 
 #hud{
   position: fixed;

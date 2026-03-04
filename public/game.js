@@ -136,6 +136,13 @@ const config = {
   width: 960,
   height: 540,
   backgroundColor: "#0b0b0f",
+
+  // ✅ 화면에 맞춰 가운데 + 비율 유지
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+
   physics: { default: "arcade", arcade: { debug: false } },
   scene: { preload, create, update }
 };
@@ -241,7 +248,6 @@ function create() {
 
   // 카메라
   this.cameras.main.startFollow(player);
-  this.cameras.main.setZoom(2);
   this.cameras.main.setBounds(0, 0, worldW, worldH);
   this.physics.world.setBounds(0, 0, worldW, worldH);
 
