@@ -56,6 +56,27 @@ function updateTimerUI() {
 // ========= Script Engine =========
 let scripts = null;
 let running = null; // { list, i }
+let typing = false;
+const TYPE_SPEED_MS = 18; // 숫자 낮을수록 빨라짐(12~25 추천)
+let typingTimer = null;
+
+function typeText(fullText) {
+  typing = true;
+  boxText.textContent = "";
+  let i = 0;
+
+  if (typingTimer) clearInterval(typingTimer);
+
+  typingTimer = setInterval(() => {
+    i += 1;
+    boxText.textContent = fullText.slice(0, i);
+    if (i >= fullText.length) {
+      clearInterval(typingTimer);
+      typingTimer = null;
+      typing = false;
+    }
+  }, TYPE_SPEED_MS);
+}
 let locked = false;
 
 function runScript(key) {
@@ -88,12 +109,12 @@ function handleCmd(cmd) {
   locked = true;
 
   if (cmd.type === "alert") {
-    boxTitle.textContent = cmd.title || "(알림)";
-    boxText.textContent = cmd.text || "";
-    boxChoices.innerHTML = "";
-    locked = false;
-    return;
-  }
+  boxTitle.textContent = cmd.title || "(알림)";
+  boxChoices.innerHTML = "";
+  typeText(cmd.text || "");
+  locked = false;
+  return;
+}
 
   if (cmd.type === "choice") {
     boxTitle.textContent = cmd.title || "(선택)";
@@ -124,9 +145,27 @@ function handleCmd(cmd) {
 // Space로 진행(선택지는 클릭)
 window.addEventListener("keydown", (e) => {
   if (e.code !== "Space") return;
-  if (!box.classList.contains("hidden") && boxChoices.childElementCount === 0 && !locked) {
-    step();
+
+  // 박스가 안 열려있으면 무시
+  if (box.classList.contains("hidden")) return;
+
+  // 선택지 있으면 클릭으로만 선택
+  if (boxChoices.childElementCount > 0) return;
+
+  // 타이핑 중이면 "즉시 전체 표시"
+  if (typing) {
+    if (typingTimer) clearInterval(typingTimer);
+    typingTimer = null;
+    typing = false;
+
+    // 현재 커맨드의 전체 문장을 그대로 보여주고 싶은데
+    // 간단하게는 '지금 boxText가 타이핑 중이니' 그냥 스킵은 하지 않고
+    // 다음 step은 한 번 더 Space 눌렀을 때 진행하도록 함.
+    // (그래서 여기서는 return)
+    return;
   }
+
+  if (!locked) step();
 });
 
 // ========= Phaser Game =========
