@@ -164,12 +164,12 @@ let player, walls, cha, zones;
 let lastZoneToastAt = 0;
 let didBoot = false;
 
-function preload() {
+function preload(this.load.json("ep1", "data/ep1.json");) {
   // 외부 이미지 없이, 런타임으로 텍스처 만들 거라 여기선 스크립트만 로드
 }
 
-async function create() {
-  await loadScripts(this);
+function create() {
+  scripts = this.cache.json.get("ep1");
 
   // === 런타임 텍스처 생성(초보용: 파일 없어도 보이게) ===
   const g = this.add.graphics();
@@ -330,6 +330,7 @@ function update(time) {
   if (inBox) {
     player.setVelocity(0, 0);
     return;
+    if (!cursors || !wasd || !player) return;
   }
 
   // 이동
