@@ -6,22 +6,21 @@ const boxChoices = document.getElementById("boxChoices");
 const toast = document.getElementById("toast");
 const toastTitle = document.getElementById("toastTitle");
 const toastText = document.getElementById("toastText");
+const toastIconL = document.getElementById("toastIconL");
+const toastIconR = document.getElementById("toastIconR");
 
 let toastTimer = null;
-function showToast({ title = "알림", text = "", ms = 1400 } = {}) {
+function showToast({ title = "알림", text = "", ms = 1400, icon = "🔔" } = {}) {
   toastTitle.textContent = title;
   toastText.textContent = text;
 
+  if (toastIconL) toastIconL.textContent = icon;
+  if (toastIconR) toastIconR.textContent = icon;
+
   toast.classList.remove("hidden");
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, ms);
+  toastTimer = setTimeout(() => toast.classList.add("hidden"), ms);
 }
-
-const affEl = document.getElementById("aff");
-const zoneStateEl = document.getElementById("zoneState");
-const timerEl = document.getElementById("timer");
 
 let currentScene = null;
 let spawnPoints = {
@@ -54,6 +53,8 @@ const state = {
   affection: -20,
   loveZone: false,
   seenLoveZoneIntro: false,
+  lastZoneMeters: null,
+  lastZoneDistanceToastAt: 0,
   timer: { active: false, secondsLeft: 0, label: "" }
 };
 
@@ -150,11 +151,11 @@ function handleCmd(cmd) {
  if (cmd.type === "setAffection") {
   setAff(cmd.value);
 
-  // ✅ 호감도는 토스트로만 표시
   showToast({
     title: "호감도",
-    text: `차여운의 호감도를 계산합니다.\n${cmd.value >= 0 ? "+" : ""}${cmd.value}`,
-    ms: 1600
+    icon: "♥",
+    text: `호감도 ${cmd.value >= 0 ? "+" : ""}${cmd.value}`,
+    ms: 1400
   });
 
   locked = false;
@@ -273,6 +274,12 @@ function create() {
 
   // ✅ JSON 가져오기
   scripts = this.cache.json.get("ep1");
+
+  if (!scripts) {
+  console.error("ep1.json 로드 실패: public/data/ep1.json 경로 확인!");
+  showToast({ title: "알림", icon: "🔔", text: "스크립트 로드 실패", ms: 1500 });
+  return;
+}
 
   // === 런타임 텍스처 생성(파일 없어도 보이게) ===
   const g = this.add.graphics();
@@ -455,27 +462,66 @@ function update() {
     }
   }
 
-  // 연애 지상주의 구역(차여운 반경)
+// ===== 연애 지상주의 구역(거리 토스트 + 진입 토스트) =====
 const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
-const inLoveZone = dist <= 160;
 
+// 진입 반경(현재 160px = 5m 느낌)
+const ZONE_RADIUS_PX = 160;
+
+// 1m 환산(타일 32px 기준)
+const PX_PER_M = 32;
+
+// LoveZone 진입 여부
+const inLoveZone = dist <= ZONE_RADIUS_PX;
+
+// (1) "…까지 Xm" 거리 토스트: 존 바깥에서만, 숫자 바뀔 때만
+if (!inLoveZone) {
+  const remainingPx = Math.max(0, dist - ZONE_RADIUS_PX);
+  const meters = Math.max(1, Math.ceil(remainingPx / PX_PER_M));
+
+  // 너무 자주 뜨지 않게(최소 간격 450ms)
+  const now = Date.now();
+  const canToast = now - state.lastZoneDistanceToastAt > 450;
+
+  if (meters !== state.lastZoneMeters && canToast) {
+    state.lastZoneMeters = meters;
+    state.lastZoneDistanceToastAt = now;
+
+    showToast({
+      title: "알림",
+      icon: "🔔",
+      text: `연애 지상주의 구역까지 ${meters}m`,
+      ms: 650
+    });
+  }
+} else {
+  // 존 안에 들어오면 거리 표시 리셋(다시 나갔다 들어올 때 자연스럽게)
+  state.lastZoneMeters = null;
+}
+
+// (2) 존 "처음 진입" 토스트는 100% 1번
 if (inLoveZone && !state.seenLoveZoneIntro) {
   state.seenLoveZoneIntro = true;
+  lastZoneToastAt = Date.now();
+
   showToast({
     title: "알림",
+    icon: "🔔",
     text: "연애 지상주의 구역이 활성화되었습니다.",
-    ms: 1400
+    ms: 1200
   });
 }
 
+// (3) 존 안에서는 가끔 다시 뜨는 확률 토스트(선택)
 if (inLoveZone) {
   const now = Date.now();
   if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
     lastZoneToastAt = now;
     showToast({
       title: "알림",
+      icon: "🔔",
       text: "연애 지상주의 구역이 활성화되었습니다.",
-      ms: 1200
+      ms: 900
     });
   }
 }
