@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>연애 지상주의 구역</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="game"></div>
+
+  <!-- UI: 호감도(차여운 ONLY) -->
+  <div id="hud">
+    <div class="hud-line">차여운 호감도: <span id="aff">-20</span></div>
+    <div class="hud-sub" id="zoneState"></div>
+    <div class="hud-sub" id="timer"></div>
+  </div>
+
+  <!-- UI: 대화/알림 -->
+  <div id="box" class="hidden" role="dialog" aria-modal="true">
+    <div id="boxTitle"></div>
+    <div id="boxText"></div>
+    <div id="boxChoices"></div>
+    <div id="boxHint">[Space] 다음 · 선택지는 클릭</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>

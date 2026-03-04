@@ -1,0 +1,47 @@
+{
+  "boot": [
+    { "type": "alert", "title": "동기화 중…", "text": "" },
+    { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역이 활성화되었습니다." },
+    { "type": "alert", "title": "(알림)", "text": "이제 자유롭게 움직일 수 있습니다." },
+    { "type": "alert", "title": "(튜토리얼)", "text": "태명하의 설정 값을 확인하세요." }
+  ],
+
+  "hallway_tutorial": [
+    { "type": "alert", "title": "(알림)", "text": "당신은 플레이어로서 모든 미션을 완수해야 합니다." },
+    { "type": "alert", "title": "(알림)", "text": "미션을 수행하며 세계를 채우세요." }
+  ],
+
+  "start_find_yeoun": [
+    { "type": "choice",
+      "title": "(알림)",
+      "text": "차여운을 찾으시겠습니까?",
+      "choices": [
+        { "label": "예", "next": "timer_run" },
+        { "label": "아니오", "next": "nope" }
+      ]
+    }
+  ],
+
+  "nope": [
+    { "type": "alert", "title": "(알림)", "text": "미션을 거부할 수 없습니다." }
+  ],
+
+  "timer_run": [
+    { "type": "setTimer", "seconds": 300, "label": "제한 시간" },
+    { "type": "alert", "title": "(알림)", "text": "제한시간 50분" },
+    { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역까지 6km" }
+  ],
+
+  "enter_rooftop": [
+    { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역으로 진입합니다." }
+  ],
+
+  "world_change": [
+    { "type": "alert", "title": "[세계개변]", "text": "" },
+    { "type": "alert", "title": "(알림)", "text": "당신으로 인해 세계가 수정되었습니다." },
+    { "type": "alert", "title": "(미션)", "text": "차여운을 행복하게 만드세요." },
+    { "type": "alert", "title": "(호감도)", "text": "차여운의 호감도를 계산합니다." },
+    { "type": "setAffection", "value": -20 },
+    { "type": "alert", "title": "(호감도)", "text": "-20" }
+  ]
+}
