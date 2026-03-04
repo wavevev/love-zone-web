@@ -47,13 +47,13 @@ canvas{
   image-rendering: crisp-edges;
 }
 
-/* ===== 토스트(알림창) : 참고 이미지 느낌 ===== */
+/* ===== 토스트(알림창) : 참고 이미지 스타일 ===== */
 .toast{
   position: fixed;
   top: 44px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(720px, calc(100vw - 32px));
+  width: min(820px, calc(100vw - 32px));
   z-index: 9999;
   pointer-events: none;
 }
@@ -61,54 +61,70 @@ canvas{
 .hidden{ display:none; }
 
 .toast-inner{
-  background: rgba(120, 180, 255, 0.10);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.16);
+  /* ✅ 배경: 검정 30% 불투명 (요청사항) */
+  background: rgba(0, 0, 0, 0.30);
+
+  /* ✅ 테두리: 불투명도 낮추지 말기(항상 또렷) */
+  border: 2px solid rgba(255,255,255,0.95);
+
+  /* 바깥 하늘색 프레임 느낌 (이미지의 연한 블루) */
   box-shadow:
-    0 10px 40px rgba(0,0,0,0.40),
-    0 0 0 1px rgba(0,0,0,0.35) inset;
-  border-radius: 10px;
+    0 0 0 5px rgba(150, 205, 255, 0.60),
+    0 10px 40px rgba(0,0,0,0.35);
 
-  /* 픽셀/쯔꾸르 느낌: 딱딱한 라인 */
-  outline: var(--pixel) solid rgba(0,0,0,0.55);
-  outline-offset: -6px;
+  border-radius: 0; /* 쯔꾸르 픽셀 느낌: 각진 박스 */
+  padding: 18px 22px;
 
-  padding: 12px 14px;
+  /* 픽셀 느낌 */
+  image-rendering: pixelated;
 }
 
 .toast-top{
   display:flex;
   justify-content:center;
   align-items:center;
-  gap: 10px;
-  color: var(--text);
-  letter-spacing: 0.5px;
-}
+  gap: 14px;
 
-.toast-icon{
-  opacity: 0.85;
-  filter: drop-shadow(0 0 8px var(--glow));
+  /* ✅ 중앙정렬 */
+  text-align:center;
+
+  font-size: 22px;
+  letter-spacing: 1px;
 }
 
 .toast-title{
-  font-size: 16px;
+  font-size: 22px;
 }
 
+.toast-icon{
+  /* 🔔를 픽셀 느낌으로 조금 더 ‘딱’ 보이게 */
+  opacity: 0.95;
+  transform: translateY(-1px);
+  filter: none;
+}
+
+/* 상단/하단 라인 */
 .toast-line{
-  height:1px;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent);
-  margin: 10px 0 10px;
+  height: 2px;
+  margin: 14px 0 14px;
+
+  background: rgba(255,255,255,0.95);
 }
 
+/* 본문 텍스트 */
 .toast-text{
+  /* ✅ 중앙정렬 */
   text-align:center;
-  color: var(--text);
-  font-size: 15px;
-  line-height: 1.6;
+
+  font-size: 26px;
+  line-height: 1.4;
   white-space: pre-wrap;
+
+  color: rgba(255,255,255,0.98);
 }
 
 /* ===== 대화창 ===== */
+/* ===== 대화창(아래 유지 / 좌측정렬) ===== */
 .dialog{
   position: fixed;
   left: 50%;
@@ -119,31 +135,40 @@ canvas{
 }
 
 .dialog-frame{
-  background: var(--panel2);
-  border: 1px solid rgba(255,255,255,0.14);
+  /* 배경은 토스트보다 살짝 진하게 */
+  background: rgba(0,0,0,0.55);
+
+  /* 테두리 또렷 */
+  border: 2px solid rgba(255,255,255,0.95);
+
   box-shadow:
-    0 14px 48px rgba(0,0,0,0.55),
-    0 0 0 1px rgba(0,0,0,0.40) inset;
-  border-radius: 10px;
+    0 10px 40px rgba(0,0,0,0.55);
 
-  /* 쯔꾸르 감성 “픽셀 테두리” 느낌 */
-  outline: var(--pixel) solid rgba(0,0,0,0.7);
-  outline-offset: -6px;
-
+  border-radius: 0; /* 각진 */
   padding: 14px 16px 12px;
+
+  image-rendering: pixelated;
 }
 
 .dialog-title{
   font-size: 16px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.78);
   margin-bottom: 10px;
+
+  /* ✅ 좌측정렬 유지 */
+  text-align:left;
 }
 
 .dialog-text{
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.75;
   white-space: pre-wrap;
   min-height: 70px;
+
+  /* ✅ 좌측정렬 유지 */
+  text-align:left;
+
+  color: rgba(255,255,255,0.98);
 }
 
 .dialog-choices{
