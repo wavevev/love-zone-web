@@ -55,7 +55,7 @@
     { "type": "alert", "title": "[세계개변]", "text": "" },
     { "type": "alert", "title": "(알림)", "text": "당신으로 인해 세계가 수정되었습니다." },
     { "type": "alert", "title": "(미션)", "text": "차여운을 행복하게 만드세요." }
-  ]
+  ],
 
     "talk_kyunghoon": [
     { "type": "alert", "title": "안경훈", "text": "야, 태명하. 너 오늘 왜 그래?" },
