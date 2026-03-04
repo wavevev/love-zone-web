@@ -38,6 +38,7 @@ function renderChoices(choices, onPick) {
 const state = {
   affection: -20,
   loveZone: false,
+  seenLoveZoneIntro: false,
   timer: { active: false, secondsLeft: 0, label: "" }
 };
 
@@ -377,7 +378,7 @@ function create() {
   // 시작 스크립트
   if (!didBoot) {
     didBoot = true;
-    runScript("boot");
+    runScript("prologue_izakaya");
   }
 }
 
@@ -439,16 +440,30 @@ function update() {
   zoneStateEl.textContent = inLoveZone ? "연애 지상주의 구역: ON" : "연애 지상주의 구역: OFF";
 
   if (inLoveZone) {
-    const now = Date.now();
-    if (now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
-      lastZoneToastAt = now;
-      boxTitle.textContent = "(알림)";
-      boxText.textContent = "연애 지상주의 구역이 활성화되었습니다.";
-      boxChoices.innerHTML = "";
-      openBox();
-      setTimeout(() => { if (boxChoices.childElementCount === 0) closeBox(); }, 1200);
-    }
+  const now = Date.now();
+
+  // ✅ 첫 진입은 무조건 1번 뜸
+  if (!state.seenLoveZoneIntro) {
+    state.seenLoveZoneIntro = true;
+    lastZoneToastAt = now;
+
+    boxTitle.textContent = "(알림)";
+    boxText.textContent = "연애 지상주의 구역이 활성화되었습니다.";
+    boxChoices.innerHTML = "";
+    openBox();
+    setTimeout(() => { if (boxChoices.childElementCount === 0) closeBox(); }, 1200);
   }
+  // 이후에는 확률 + 쿨다운
+  else if (now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
+    lastZoneToastAt = now;
+
+    boxTitle.textContent = "(알림)";
+    boxText.textContent = "연애 지상주의 구역이 활성화되었습니다.";
+    boxChoices.innerHTML = "";
+    openBox();
+    setTimeout(() => { if (boxChoices.childElementCount === 0) closeBox(); }, 1200);
+  }
+}
 
   // 차여운 근처 상호작용: 세계개변
   if (Phaser.Input.Keyboard.JustDown(interactKey)) {
