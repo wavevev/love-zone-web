@@ -1,4 +1,19 @@
 {
+
+      "prologue_izakaya": [
+    { "type": "alert", "title": "이자카야", "text": "갈색 조명이 어둡게 짙은 술집.\n바 테이블엔 나와 선배 둘뿐이다." },
+    { "type": "alert", "title": "명하", "text": "선배, 이 소설 진짜 별로예요." },
+    { "type": "alert", "title": "명하", "text": "차여운 너무 불쌍하잖아요." },
+    { "type": "alert", "title": "선배", "text": "그럼 네가 바꿔 줄래?" },
+    { "type": "alert", "title": "명하", "text": "…제가요?" },
+
+    { "type": "fadeOut", "ms": 500 },
+    { "type": "teleport", "to": "classroom" },
+    { "type": "fadeIn", "ms": 500 },
+
+    { "type": "goto", "next": "boot" }
+  ],
+  
   "boot": [
     { "type": "alert", "title": "동기화 중…", "text": "" },
     { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역이 활성화되었습니다." },

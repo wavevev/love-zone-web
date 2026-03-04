@@ -8,6 +8,13 @@ const affEl = document.getElementById("aff");
 const zoneStateEl = document.getElementById("zoneState");
 const timerEl = document.getElementById("timer");
 
+let currentScene = null;
+let spawnPoints = {
+  classroom: { x: 420, y: 360 },
+  hallway: { x: 820, y: 360 },
+  rooftop: { x: 1850, y: 250 }
+};
+
 function openBox() { box.classList.remove("hidden"); }
 function closeBox() {
   box.classList.add("hidden");
@@ -138,6 +145,45 @@ function handleCmd(cmd) {
     return;
   }
 
+    if (cmd.type === "fadeOut") {
+    const ms = cmd.ms ?? 400;
+    currentScene.cameras.main.fadeOut(ms, 0, 0, 0);
+    currentScene.time.delayedCall(ms, () => {
+      locked = false;
+      step();
+    });
+    return;
+  }
+
+  if (cmd.type === "fadeIn") {
+    const ms = cmd.ms ?? 400;
+    currentScene.cameras.main.fadeIn(ms, 0, 0, 0);
+    currentScene.time.delayedCall(ms, () => {
+      locked = false;
+      step();
+    });
+    return;
+  }
+
+  if (cmd.type === "teleport") {
+    const to = cmd.to;
+    const p = spawnPoints[to];
+    if (p && player) {
+      player.setPosition(p.x, p.y);
+      // 카메라도 즉시 따라오게
+      currentScene.cameras.main.centerOn(p.x, p.y);
+    }
+    locked = false;
+    step();
+    return;
+  }
+
+  if (cmd.type === "goto") {
+    locked = false;
+    step(cmd.next);
+    return;
+  }
+
   locked = false;
   step();
 }
@@ -199,6 +245,8 @@ function preload() {
 }
 
 function create() {
+    currentScene = this;
+
   // ✅ JSON 가져오기
   scripts = this.cache.json.get("ep1");
 
