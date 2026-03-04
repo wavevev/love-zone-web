@@ -436,8 +436,9 @@ function create() {
   });
 
   // 초기 UI
-  setAff(state.affection);
-  updateTimerUI();
+setAff(state.affection);
+updateTimerHud(); // (초기값 반영만)
+hideTimerHud();   // 시작 시 숨겨두기(토스트 후 켜질 거라서)
 
   // 시작 스크립트
   if (!didBoot) {
@@ -497,61 +498,64 @@ function update() {
     }
   }
 
-// ===== 연애 지상주의 구역(거리 토스트 + 진입 토스트) =====
-const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
-const ZONE_RADIUS_PX = 160;
-const PX_PER_M = 32;
-const inLoveZone = dist <= ZONE_RADIUS_PX;
+  // ===== 연애 지상주의 구역(거리 토스트 + 진입 토스트) =====
+  const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
+  const ZONE_RADIUS_PX = 160;
+  const PX_PER_M = 32;
+  const inLoveZone = dist <= ZONE_RADIUS_PX;
 
-if (!inLoveZone) {
-  const remainingPx = Math.max(0, dist - ZONE_RADIUS_PX);
-  const meters = Math.max(1, Math.ceil(remainingPx / PX_PER_M));
+  // ...까지 Xm
+  if (!inLoveZone) {
+    const remainingPx = Math.max(0, dist - ZONE_RADIUS_PX);
+    const meters = Math.max(1, Math.ceil(remainingPx / PX_PER_M));
 
-  const now = Date.now();
-  const canToast = now - state.lastZoneDistanceToastAt > 450;
+    const now = Date.now();
+    const canToast = now - state.lastZoneDistanceToastAt > 450;
 
-  if (meters !== state.lastZoneMeters && canToast) {
-    state.lastZoneMeters = meters;
-    state.lastZoneDistanceToastAt = now;
+    if (meters !== state.lastZoneMeters && canToast) {
+      state.lastZoneMeters = meters;
+      state.lastZoneDistanceToastAt = now;
 
-    showToast({
-      title: "알림",
-      icon: "🔔",
-      text: `연애 지상주의 구역까지 ${meters}m`,
-      ms: 650
-    });
+      showToast({
+        title: "알림",
+        icon: "🔔",
+        text: `연애 지상주의 구역까지 ${meters}m`,
+        ms: 650
+      });
+    }
+  } else {
+    state.lastZoneMeters = null;
   }
-} else {
-  state.lastZoneMeters = null;
-}
 
-if (inLoveZone && !state.seenLoveZoneIntro) {
-  state.seenLoveZoneIntro = true;
-  lastZoneToastAt = Date.now();
-  showToast({
-    title: "알림",
-    icon: "🔔",
-    text: "연애 지상주의 구역이 활성화되었습니다.",
-    ms: 1200
-  });
-}
-
-if (inLoveZone) {
-  const now = Date.now();
-  if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
-    lastZoneToastAt = now;
+  // 첫 진입 알림
+  if (inLoveZone && !state.seenLoveZoneIntro) {
+    state.seenLoveZoneIntro = true;
+    lastZoneToastAt = Date.now();
     showToast({
       title: "알림",
       icon: "🔔",
       text: "연애 지상주의 구역이 활성화되었습니다.",
-      ms: 900
+      ms: 1200
     });
   }
-}
 
-}
+  // 존 안 랜덤 알림(선택)
+  if (inLoveZone) {
+    const now = Date.now();
+    if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
+      lastZoneToastAt = now;
+      showToast({
+        title: "알림",
+        icon: "🔔",
+        text: "연애 지상주의 구역이 활성화되었습니다.",
+        ms: 900
+      });
+    }
+  }
 
   // 차여운 근처 상호작용: 세계개변
   if (Phaser.Input.Keyboard.JustDown(interactKey)) {
     if (dist <= 80) runScript("world_change");
   }
+}
+  
