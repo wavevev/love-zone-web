@@ -1,50 +1,26 @@
 {
-
-      "prologue_izakaya": [
+  "prologue_izakaya": [
     { "type": "alert", "title": "이자카야", "text": "갈색 조명이 어둡게 짙은 술집.\n바 테이블엔 나와 선배 둘뿐이다." },
     { "type": "alert", "title": "명하", "text": "선배, 이 소설 진짜 별로예요." },
-    { "type": "alert", "title": "명하", "text": "차여운 너무 불쌍하잖아요." },
     { "type": "alert", "title": "선배", "text": "그럼 네가 바꿔 줄래?" },
-    { "type": "alert", "title": "명하", "text": "…제가요?" },
-
     { "type": "fadeOut", "ms": 500 },
     { "type": "teleport", "to": "classroom" },
     { "type": "fadeIn", "ms": 500 },
-
     { "type": "goto", "next": "boot" }
   ],
-  
+
   "boot": [
-    { "type": "alert", "title": "동기화 중…", "text": "" },
-    { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역이 활성화되었습니다." },
-    { "type": "alert", "title": "(알림)", "text": "이제 자유롭게 움직일 수 있습니다." },
-    { "type": "alert", "title": "(튜토리얼)", "text": "태명하의 설정 값을 확인하세요." }
+    { "type": "alert", "title": "(알림)", "text": "동기화 중…" },
+    { "type": "alert", "title": "(알림)", "text": "이제 자유롭게 움직일 수 있습니다." }
   ],
 
   "hallway_tutorial": [
-    { "type": "alert", "title": "(알림)", "text": "당신은 플레이어로서 모든 미션을 완수해야 합니다." },
-    { "type": "alert", "title": "(알림)", "text": "미션을 수행하며 세계를 채우세요." }
+    { "type": "alert", "title": "(튜토리얼)", "text": "가까이 가서 SPACE로 NPC와 대화할 수 있습니다." }
   ],
 
   "start_find_yeoun": [
-    { "type": "choice",
-      "title": "(알림)",
-      "text": "차여운을 찾으시겠습니까?",
-      "choices": [
-        { "label": "예", "next": "timer_run" },
-        { "label": "아니오", "next": "nope" }
-      ]
-    }
-  ],
-
-  "nope": [
-    { "type": "alert", "title": "(알림)", "text": "미션을 거부할 수 없습니다." }
-  ],
-
-  "timer_run": [
-    { "type": "setTimer", "seconds": 300, "label": "제한 시간" },
-    { "type": "alert", "title": "(알림)", "text": "제한시간 50분" },
-    { "type": "alert", "title": "(알림)", "text": "연애 지상주의 구역까지 6km" }
+    { "type": "setTimer", "seconds": 3000, "label": "제한 시간" },
+    { "type": "alert", "title": "명하", "text": "50분… 뛰면 30분.\n가보지 뭐." }
   ],
 
   "enter_rooftop": [
@@ -52,26 +28,25 @@
   ],
 
   "world_change": [
-    { "type": "alert", "title": "[세계개변]", "text": "" },
-    { "type": "alert", "title": "(알림)", "text": "당신으로 인해 세계가 수정되었습니다." },
-    { "type": "alert", "title": "(미션)", "text": "차여운을 행복하게 만드세요." }
+    { "type": "alert", "title": "(알림)", "text": "[세계개변]" },
+    { "type": "setAffection", "value": -20 }
   ],
 
-    "talk_kyunghoon": [
+  "talk_kyunghoon": [
     { "type": "alert", "title": "안경훈", "text": "야, 태명하. 너 오늘 왜 그래?" },
     { "type": "choice", "title": "명하", "text": "뭐라고 대답할까?", "choices": [
-        { "label": "아무 것도 아니야.", "next": "talk_kyunghoon_a" },
-        { "label": "차여운 어디 있는지 알아?", "next": "talk_kyunghoon_b" }
+      { "label": "아무 것도 아니야.", "next": "talk_kyunghoon_a" },
+      { "label": "차여운 어디 있는지 알아?", "next": "talk_kyunghoon_b" }
     ]}
-    ],
-    "talk_kyunghoon_a": [
+  ],
+  "talk_kyunghoon_a": [
     { "type": "alert", "title": "안경훈", "text": "아무 것도 아니라면서 얼굴은 왜 그 모양이냐." }
-    ],
-    "talk_kyunghoon_b": [
-    { "type": "alert", "title": "안경훈", "text": "차여운? 유명하지. 근데 오늘 학교 안 나왔을걸." }
-    ],
+  ],
+  "talk_kyunghoon_b": [
+    { "type": "alert", "title": "안경훈", "text": "차여운? 유명하지.\n근데 오늘 학교 안 나왔을걸." }
+  ],
 
-    "talk_cheonsangwon": [
-    { "type": "alert", "title": "천상원", "text": "너, 재밌다? 이름이 뭐라고 했지." }
-    ]
+  "talk_cheonsangwon": [
+    { "type": "alert", "title": "천상원", "text": "너, 재밌다?\n이름이 뭐라고 했지." }
+  ]
 }
