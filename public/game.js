@@ -1,12 +1,15 @@
 // =====================================================
-// LOVE ZONE WEB - FULL GAME.JS (A: 맵 탐색형 쯔꾸르)
-// - 대화 스크립트 엔진(타이핑)
-// - 토스트(🔔/♥)
-// - 거리 m 토스트 + LoveZone 진입 토스트
-// - 페널티(호감도<0 & LoveZone 진입)
-// - 타이머: 3초 토스트 → 우상단 HUD
-// - NPC: 근접 + SPACE로 대화
-// - 저장/불러오기: F5 저장, F9 불러오기
+// LOVE ZONE WEB - FULL GAME.JS (A: 맵 탐색형)
+// 요구사항 반영:
+// 1) 타이핑 중 Space => 문장 전체 즉시 출력 (멈춤 X)
+// 2) 토스트 중앙
+// 3) 거리토스트만 상단/짧게, 나머지 4초 중앙
+// 4) ESC로 대화 강제 종료
+// 5) 선배 대화 후 학교로 이동(샘플 ep1.json에 포함)
+// 6) 선배 NPC 추가
+// 7) 미션 시스템 추가 (토스트 + M 미션로그)
+// 8) 장소 이동 추가 (포탈 근처 Space => 이동 메뉴)
+// 9) NPC 호감도는 이번엔 미포함
 // =====================================================
 
 // ========= DOM UI =========
@@ -25,8 +28,15 @@ const timerHud = document.getElementById("timerHud");
 const timerLabel = document.getElementById("timerLabel");
 const timerValue = document.getElementById("timerValue");
 
+// ========= Toast =========
 let toastTimer = null;
-function showToast({ title = "알림", text = "", ms = 1400, icon = "🔔" } = {}) {
+function showToast({
+  title = "알림",
+  text = "",
+  ms = 4000,              // 기본 4초
+  icon = "🔔",
+  position = "center"     // 기본 중앙
+} = {}) {
   if (!toast || !toastTitle || !toastText) return;
 
   toastTitle.textContent = title;
@@ -36,10 +46,16 @@ function showToast({ title = "알림", text = "", ms = 1400, icon = "🔔" } = {
   if (toastIconR) toastIconR.textContent = icon;
 
   toast.classList.remove("hidden");
+
+  // 위치 클래스
+  toast.classList.remove("toast-center", "toast-top");
+  toast.classList.add(position === "top" ? "toast-top" : "toast-center");
+
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add("hidden"), ms);
 }
 
+// ========= Box =========
 function openBox() { box?.classList.remove("hidden"); }
 function closeBox() {
   box?.classList.add("hidden");
@@ -47,7 +63,6 @@ function closeBox() {
   if (boxText) boxText.textContent = "";
   if (boxChoices) boxChoices.innerHTML = "";
 }
-
 function renderChoices(choices, onPick) {
   if (!boxChoices) return;
   boxChoices.innerHTML = "";
@@ -63,25 +78,35 @@ function renderChoices(choices, onPick) {
 // ========= Game State =========
 const state = {
   affection: -20,
+
+  // LoveZone
   seenLoveZoneIntro: false,
   lastZoneMeters: null,
   lastZoneDistanceToastAt: 0,
+  lastZoneToastAt: 0,
+
+  // penalty
   lastPenaltyAt: 0,
-  timer: { active: false, secondsLeft: 0, label: "" }
+
+  // timer
+  timer: { active: false, secondsLeft: 0, label: "" },
+
+  // missions
+  mainMission: "",
+  missions: {} // id: { text, status: "active"|"done"|"fail" }
 };
 
 function setAff(v) {
-  state.affection = v;
-  // 상시 표시 안 함(토스트로만)
+  state.affection = v; // 상시표시 X
 }
 
+// ========= Timer HUD =========
 function formatMMSS(totalSeconds) {
   const s = Math.max(0, Math.floor(totalSeconds));
   const mm = String(Math.floor(s / 60)).padStart(2, "0");
   const ss = String(s % 60).padStart(2, "0");
   return `${mm}:${ss}`;
 }
-
 function showTimerHud(labelText) {
   if (!timerHud) return;
   timerHud.classList.remove("hidden");
@@ -95,25 +120,65 @@ function updateTimerHud() {
   if (!timerValue) return;
   timerValue.textContent = formatMMSS(state.timer.secondsLeft);
 }
-
 function startTimer(seconds, label) {
   state.timer.active = true;
   state.timer.secondsLeft = seconds;
   state.timer.label = label || "제한 시간";
 
-  // 1) 토스트 3초
+  // 토스트 3초 (중앙)
   showToast({
     title: "알림",
     icon: "🔔",
     text: `제한 시간 ${formatMMSS(seconds)}`,
-    ms: 3000
+    ms: 3000,
+    position: "center"
   });
 
-  // 2) 3초 뒤 HUD로
+  // 3초 후 HUD로 전환
   setTimeout(() => {
     showTimerHud(state.timer.label);
     updateTimerHud();
   }, 3000);
+}
+
+// ========= Missions =========
+function setMainMission(text) {
+  state.mainMission = text || "";
+  if (text) showToast({ title: "미션", icon: "🔔", text: `메인 미션\n${text}` });
+}
+function addMission(id, text) {
+  if (!id) return;
+  state.missions[id] = { text: text || id, status: "active" };
+  showToast({ title: "미션", icon: "🔔", text: `서브 미션 추가\n${state.missions[id].text}` });
+}
+function completeMission(id) {
+  if (!id || !state.missions[id]) return;
+  state.missions[id].status = "done";
+  showToast({ title: "미션", icon: "🔔", text: `서브 미션 완료\n${state.missions[id].text}` });
+}
+function failMission(id) {
+  if (!id || !state.missions[id]) return;
+  state.missions[id].status = "fail";
+  showToast({ title: "미션", icon: "🔔", text: `서브 미션 실패\n${state.missions[id].text}` });
+}
+function openMissionLog() {
+  openBox();
+  if (boxTitle) boxTitle.textContent = "(미션)";
+  if (boxChoices) boxChoices.innerHTML = "";
+
+  let lines = [];
+  if (state.mainMission) lines.push(`메인: ${state.mainMission}`);
+  const ids = Object.keys(state.missions);
+  if (ids.length === 0) lines.push("서브 미션: 없음");
+  else {
+    lines.push("서브:");
+    for (const id of ids) {
+      const m = state.missions[id];
+      const mark = m.status === "done" ? "✅" : (m.status === "fail" ? "❌" : "•");
+      lines.push(`${mark} ${m.text}`);
+    }
+  }
+  if (boxText) boxText.textContent = lines.join("\n");
 }
 
 // ========= Script Engine =========
@@ -122,18 +187,20 @@ let running = null; // { list, i }
 let typing = false;
 const TYPE_SPEED_MS = 18;
 let typingTimer = null;
+let currentTypingFullText = "";
 let locked = false;
 
 function typeText(fullText) {
   typing = true;
+  currentTypingFullText = fullText || "";
   if (boxText) boxText.textContent = "";
   let i = 0;
 
   if (typingTimer) clearInterval(typingTimer);
   typingTimer = setInterval(() => {
     i += 1;
-    if (boxText) boxText.textContent = fullText.slice(0, i);
-    if (i >= fullText.length) {
+    if (boxText) boxText.textContent = currentTypingFullText.slice(0, i);
+    if (i >= currentTypingFullText.length) {
       clearInterval(typingTimer);
       typingTimer = null;
       typing = false;
@@ -173,9 +240,12 @@ function step(nextKeyFromChoice) {
 let currentScene = null;
 
 let spawnPoints = {
-  classroom: { x: 420, y: 360 },
-  hallway: { x: 820, y: 360 },
-  rooftop: { x: 1850, y: 250 }
+  izakaya:   { x: 300,  y: 360 },
+  classroom: { x: 1280, y: 360 },
+  hallway:   { x: 1500, y: 360 },
+  yard:      { x: 1750, y: 900 },
+  rooftop:   { x: 1850, y: 250 },
+  crosswalk: { x: 1120, y: 1050 }
 };
 
 function handleCmd(cmd) {
@@ -203,8 +273,7 @@ function handleCmd(cmd) {
     showToast({
       title: "호감도",
       icon: "♥",
-      text: `호감도 ${cmd.value >= 0 ? "+" : ""}${cmd.value}`,
-      ms: 1400
+      text: `호감도 ${cmd.value >= 0 ? "+" : ""}${cmd.value}`
     });
 
     locked = false;
@@ -219,23 +288,43 @@ function handleCmd(cmd) {
     return;
   }
 
+  // missions
+  if (cmd.type === "setMainMission") {
+    setMainMission(cmd.text || "");
+    locked = false;
+    step();
+    return;
+  }
+  if (cmd.type === "addMission") {
+    addMission(cmd.id, cmd.text);
+    locked = false;
+    step();
+    return;
+  }
+  if (cmd.type === "completeMission") {
+    completeMission(cmd.id);
+    locked = false;
+    step();
+    return;
+  }
+  if (cmd.type === "failMission") {
+    failMission(cmd.id);
+    locked = false;
+    step();
+    return;
+  }
+
   if (cmd.type === "fadeOut") {
     const ms = cmd.ms ?? 400;
     currentScene.cameras.main.fadeOut(ms, 0, 0, 0);
-    currentScene.time.delayedCall(ms, () => {
-      locked = false;
-      step();
-    });
+    currentScene.time.delayedCall(ms, () => { locked = false; step(); });
     return;
   }
 
   if (cmd.type === "fadeIn") {
     const ms = cmd.ms ?? 400;
     currentScene.cameras.main.fadeIn(ms, 0, 0, 0);
-    currentScene.time.delayedCall(ms, () => {
-      locked = false;
-      step();
-    });
+    currentScene.time.delayedCall(ms, () => { locked = false; step(); });
     return;
   }
 
@@ -261,25 +350,49 @@ function handleCmd(cmd) {
   step();
 }
 
-// Space로 진행(선택지는 클릭)
+// ========= Key controls =========
+
+// Space: 대화 진행
 window.addEventListener("keydown", (e) => {
   if (e.code !== "Space") return;
 
-  // 박스가 안 열려있으면 무시
+  // 박스가 닫혀있으면 여기서는 무시(맵 상호작용은 Phaser update에서 처리)
   if (box?.classList.contains("hidden")) return;
 
-  // 선택지 있으면 클릭으로만 선택
+  // 선택지 있으면 클릭으로만
   if (boxChoices && boxChoices.childElementCount > 0) return;
 
-  // 타이핑 중이면 스킵(완성 표시)만 하고 종료
+  // ✅ 타이핑 중이면: 문장 전체 즉시 출력
   if (typing) {
     if (typingTimer) clearInterval(typingTimer);
     typingTimer = null;
     typing = false;
+    if (boxText) boxText.textContent = currentTypingFullText;
     return;
   }
 
   if (!locked) step();
+});
+
+// ESC: 대화 강제 종료
+window.addEventListener("keydown", (e) => {
+  if (e.code !== "Escape") return;
+
+  if (box && !box.classList.contains("hidden")) {
+    if (typingTimer) clearInterval(typingTimer);
+    typingTimer = null;
+    typing = false;
+
+    running = null;
+    locked = false;
+    closeBox();
+  }
+});
+
+// M: 미션 로그
+window.addEventListener("keydown", (e) => {
+  if (e.code !== "KeyM") return;
+  openMissionLog();
 });
 
 // 저장/불러오기 (F5 / F9)
@@ -293,16 +406,18 @@ function saveGame() {
     player: { x: player.x, y: player.y },
     affection: state.affection,
     seenLoveZoneIntro: state.seenLoveZoneIntro,
-    timer: { ...state.timer }
+    timer: { ...state.timer },
+    mainMission: state.mainMission,
+    missions: state.missions
   };
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  showToast({ title: "알림", icon: "🔔", text: "저장되었습니다.", ms: 900 });
+  showToast({ title: "알림", icon: "🔔", text: "저장되었습니다." });
 }
 
 function loadGame() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) {
-    showToast({ title: "알림", icon: "🔔", text: "저장 데이터가 없습니다.", ms: 900 });
+    showToast({ title: "알림", icon: "🔔", text: "저장 데이터가 없습니다." });
     return;
   }
   const data = JSON.parse(raw);
@@ -311,6 +426,8 @@ function loadGame() {
   state.affection = data.affection ?? state.affection;
   state.seenLoveZoneIntro = !!data.seenLoveZoneIntro;
   state.timer = data.timer ?? state.timer;
+  state.mainMission = data.mainMission ?? state.mainMission;
+  state.missions = data.missions ?? state.missions;
 
   if (player && data.player) {
     player.setPosition(data.player.x, data.player.y);
@@ -324,7 +441,7 @@ function loadGame() {
     hideTimerHud();
   }
 
-  showToast({ title: "알림", icon: "🔔", text: "불러왔습니다.", ms: 900 });
+  showToast({ title: "알림", icon: "🔔", text: "불러왔습니다." });
 }
 
 window.addEventListener("keydown", (e) => {
@@ -349,22 +466,21 @@ new Phaser.Game(config);
 let cursors, wasd, interactKey;
 let player, walls, cha, zones;
 let npcs = [];
+let portals = [];
 let interactHint = null;
-let lastNpcInteractAt = 0;
-
-let lastZoneToastAt = 0;
-let didBoot = false;
+let lastInteractAt = 0;
 
 function preload() {
   this.load.json("ep1", "data/ep1.json");
 }
 
+// ========= Penalty =========
 function triggerPenalty(reasonText = "마이너스 호감도로 인해 페널티가 적용됩니다.") {
   const now = Date.now();
   if (now - state.lastPenaltyAt < 3500) return;
   state.lastPenaltyAt = now;
 
-  showToast({ title: "알림", icon: "🔔", text: reasonText, ms: 1200 });
+  showToast({ title: "알림", icon: "🔔", text: reasonText });
 
   // 글리치
   if (currentScene?.glitch) {
@@ -372,7 +488,7 @@ function triggerPenalty(reasonText = "마이너스 호감도로 인해 페널티
     currentScene.tweens.add({
       targets: currentScene.glitch,
       alpha: 0,
-      duration: 280,
+      duration: 260,
       yoyo: true,
       repeat: 2
     });
@@ -381,9 +497,31 @@ function triggerPenalty(reasonText = "마이너스 호감도로 인해 페널티
   // 예시 페널티: 호감도 추가 하락
   const drop = 2;
   state.affection -= drop;
-  showToast({ title: "호감도", icon: "♥", text: `호감도 -${drop}`, ms: 900 });
+  showToast({ title: "호감도", icon: "♥", text: `호감도 -${drop}` });
 }
 
+// ========= Travel Menu =========
+function openTravelMenu(title, options) {
+  // options: [{ label, to }]
+  openBox();
+  if (boxTitle) boxTitle.textContent = title || "(이동)";
+  if (boxText) boxText.textContent = "어디로 이동할까?";
+  renderChoices(options, (ch) => {
+    closeBox();
+    // 순간이동
+    const p = spawnPoints[ch.to];
+    if (p && player) {
+      currentScene.cameras.main.fadeOut(220, 0, 0, 0);
+      currentScene.time.delayedCall(220, () => {
+        player.setPosition(p.x, p.y);
+        currentScene.cameras.main.centerOn(p.x, p.y);
+        currentScene.cameras.main.fadeIn(220, 0, 0, 0);
+      });
+    }
+  });
+}
+
+// ========= Create =========
 function create() {
   currentScene = this;
 
@@ -391,18 +529,16 @@ function create() {
   scripts = this.cache.json.get("ep1");
   if (!scripts) {
     console.error("ep1.json 로드 실패: public/data/ep1.json 경로 확인!");
-    showToast({ title: "알림", icon: "🔔", text: "스크립트 로드 실패", ms: 1500 });
+    showToast({ title: "알림", icon: "🔔", text: "스크립트 로드 실패" });
     return;
   }
 
-  // === 런타임 텍스처 생성 ===
+  // === runtime textures ===
   const g = this.add.graphics();
 
-  // floor
-  g.fillStyle(0x1f2937, 1);
-  g.fillRect(0, 0, 32, 32);
-  g.generateTexture("floor", 32, 32);
-  g.clear();
+  // floors (두 맵 느낌)
+  g.fillStyle(0x1b1020, 1); g.fillRect(0, 0, 32, 32); g.generateTexture("floor_izakaya", 32, 32); g.clear();
+  g.fillStyle(0x1f2937, 1); g.fillRect(0, 0, 32, 32); g.generateTexture("floor_school", 32, 32); g.clear();
 
   // wall
   g.fillStyle(0x4b5563, 1);
@@ -434,22 +570,32 @@ function create() {
   g.lineStyle(3, 0x000000, 1);
   g.strokeRoundedRect(1, 1, 28, 28, 8);
   g.generateTexture("npc", 30, 30);
+  g.clear();
+
+  // portal
+  g.fillStyle(0xffd24a, 1);
+  g.fillRoundedRect(0, 0, 30, 30, 6);
+  g.lineStyle(3, 0x000000, 1);
+  g.strokeRoundedRect(1, 1, 28, 28, 6);
+  g.generateTexture("portal", 30, 30);
   g.destroy();
 
-  // === 월드 ===
-  const worldW = 2200;
+  // === world ===
+  const worldW = 2400;
   const worldH = 1400;
 
+  // 맵 구역:
+  // - 이자카야(왼쪽) 0~900
+  // - 학교(오른쪽) 900~2400
   for (let y = 0; y < worldH; y += 32) {
     for (let x = 0; x < worldW; x += 32) {
-      this.add.image(x, y, "floor").setOrigin(0);
+      const tex = (x < 900) ? "floor_izakaya" : "floor_school";
+      this.add.image(x, y, tex).setOrigin(0);
     }
   }
 
   // walls
   walls = this.physics.add.staticGroup();
-
-  // border
   for (let x = 0; x < worldW; x += 32) {
     walls.create(x + 16, 16, "wall");
     walls.create(x + 16, worldH - 16, "wall");
@@ -459,18 +605,18 @@ function create() {
     walls.create(worldW - 16, y + 16, "wall");
   }
 
-  // simple classroom blocks
-  for (let x = 200; x <= 700; x += 32) walls.create(x, 200, "wall");
-  for (let y = 200; y <= 520; y += 32) walls.create(200, y, "wall");
-  for (let y = 200; y <= 520; y += 32) walls.create(700, y, "wall");
+  // 교실 느낌 벽(학교쪽)
+  for (let x = 1200; x <= 1700; x += 32) walls.create(x, 200, "wall");
+  for (let y = 200; y <= 520; y += 32) walls.create(1200, y, "wall");
+  for (let y = 200; y <= 520; y += 32) walls.create(1700, y, "wall");
 
   // player
-  player = this.physics.add.sprite(420, 360, "player");
+  player = this.physics.add.sprite(spawnPoints.izakaya.x, spawnPoints.izakaya.y, "player");
   player.setCollideWorldBounds(true);
   player.body.setSize(26, 26, true);
   player.setDepth(9999);
 
-  // player name tag
+  // name tag
   const nameTag = this.add.text(player.x - 14, player.y - 42, "명하", {
     fontSize: "16px",
     color: "#00ff66",
@@ -478,9 +624,8 @@ function create() {
     padding: { x: 4, y: 2 }
   }).setDepth(9999);
 
-  // cha
-  cha = this.physics.add.staticSprite(1850, 250, "cha");
-  cha.setDepth(9999);
+  // cha (옥탑방 쪽)
+  cha = this.physics.add.staticSprite(spawnPoints.rooftop.x, spawnPoints.rooftop.y, "cha").setDepth(9999);
 
   // NPCs
   npcs = [];
@@ -498,8 +643,44 @@ function create() {
     npcTags.push({ sprite: s, tag });
   };
 
-  addNpc(520, 360, "안경훈", "talk_kyunghoon");
-  addNpc(640, 360, "천상원", "talk_cheonsangwon");
+  // ✅ 선배(이자카야)
+  addNpc(420, 360, "선배", "talk_senbae");
+
+  // ✅ 학교 NPC들
+  addNpc(1380, 360, "안경훈", "talk_kyunghoon");
+  addNpc(1560, 360, "천상원", "talk_cheonsangwon");
+
+  // Portals (장소 이동)
+  portals = [];
+  const addPortal = (x, y, label, menuTitle, options) => {
+    const s = this.physics.add.staticSprite(x, y, "portal").setDepth(9999);
+    const tag = this.add.text(x - 28, y - 42, label, {
+      fontSize: "16px",
+      color: "#ffffff",
+      backgroundColor: "#000000",
+      padding: { x: 4, y: 2 }
+    }).setDepth(9999);
+
+    portals.push({ sprite: s, tag, label, menuTitle, options });
+  };
+
+  // 이자카야 -> 학교 포탈(샘플)
+  addPortal(820, 360, "문", "(이동)", [
+    { label: "학교(교실)", to: "classroom" },
+    { label: "학교(복도)", to: "hallway" }
+  ]);
+
+  // 학교 내 이동 포탈들(샘플)
+  addPortal(1300, 560, "계단", "(이동)", [
+    { label: "복도", to: "hallway" },
+    { label: "운동장", to: "yard" },
+    { label: "옥상", to: "rooftop" }
+  ]);
+
+  addPortal(1750, 980, "정문", "(이동)", [
+    { label: "횡단보도", to: "crosswalk" },
+    { label: "교실", to: "classroom" }
+  ]);
 
   // collisions
   this.physics.add.collider(player, walls);
@@ -509,14 +690,15 @@ function create() {
   this.cameras.main.setBounds(0, 0, worldW, worldH);
   this.physics.world.setBounds(0, 0, worldW, worldH);
 
-  // follow tags
+  // tags follow
   this.events.on("postupdate", () => {
     nameTag.setPosition(player.x - 14, player.y - 42);
     for (const nt of npcTags) nt.tag.setPosition(nt.sprite.x - 20, nt.sprite.y - 42);
+    for (const p of portals) p.tag.setPosition(p.sprite.x - 28, p.sprite.y - 42);
   });
 
   // interact hint
-  interactHint = this.add.text(20, 20, "SPACE: 대화", {
+  interactHint = this.add.text(20, 20, "SPACE: 상호작용", {
     fontSize: "16px",
     color: "#ffffff",
     backgroundColor: "#000000",
@@ -525,7 +707,7 @@ function create() {
   interactHint.setScrollFactor(0);
   interactHint.setVisible(false);
 
-  // vignette glow (LoveZone)
+  // LoveZone glow
   const vignette = this.add.rectangle(0, 0, 960, 540, 0x66ccff, 0);
   vignette.setDepth(99997);
   vignette.setScrollFactor(0);
@@ -542,13 +724,13 @@ function create() {
   wasd = this.input.keyboard.addKeys("W,A,S,D");
   interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-  // zones
+  // zones (스토리 트리거)
   zones = [];
-  zones.push(makeZone(this, 760, 260, 220, 200, "hallway_tutorial", true));
-  zones.push(makeZone(this, 900, 900, 400, 300, "start_find_yeoun", true));
-  zones.push(makeZone(this, 1700, 150, 520, 320, "enter_rooftop", true));
+  zones.push(makeZone(this, 1220, 260, 220, 200, "hallway_tutorial", true));     // 교실근처
+  zones.push(makeZone(this, 1700, 900, 400, 300, "start_find_yeoun", true));     // 운동장쪽
+  zones.push(makeZone(this, 1680, 150, 520, 320, "enter_rooftop", true));        // 옥상쪽
 
-  // timer tick (1s)
+  // timer tick
   this.time.addEvent({
     delay: 1000,
     loop: true,
@@ -566,26 +748,23 @@ function create() {
     }
   });
 
-  // init ui
-  setAff(state.affection);
+  // init
   updateTimerHud();
   hideTimerHud();
 
-  // start script
-  if (!didBoot) {
-    didBoot = true;
-    runScript("prologue_izakaya");
-  }
+  // start prologue
+  runScript("prologue_izakaya");
 }
 
 function makeZone(scene, x, y, w, h, scriptKey, once) {
-  const zone = scene.add.zone(x + w / 2, y + h / 2, w, h);
+  const zone = scene.add.zone(x + w/2, y + h/2, w, h);
   scene.physics.world.enable(zone);
   zone.body.setAllowGravity(false);
   zone.body.setImmovable(true);
   return { zone, scriptKey, once, fired: false };
 }
 
+// ========= Update =========
 function update() {
   if (!cursors || !wasd || !player) return;
 
@@ -613,17 +792,15 @@ function update() {
 
   player.setVelocity(vx, vy);
 
-  // 존 트리거
+  // zones
   for (const z of zones) {
     if (z.once && z.fired) continue;
-
     const rect = new Phaser.Geom.Rectangle(
-      z.zone.x - z.zone.width / 2,
-      z.zone.y - z.zone.height / 2,
+      z.zone.x - z.zone.width/2,
+      z.zone.y - z.zone.height/2,
       z.zone.width,
       z.zone.height
     );
-
     if (Phaser.Geom.Rectangle.Contains(rect, player.x, player.y)) {
       z.fired = true;
       runScript(z.scriptKey);
@@ -631,33 +808,35 @@ function update() {
     }
   }
 
-  // ===== NPC 상호작용(가까우면 힌트 표시) =====
-  let nearestNpc = null;
-  let nearestDist = Infinity;
+  // nearest NPC / Portal
+  let nearest = null; // { type, ref, dist }
+  const CAN_INTERACT_DIST = 90;
 
   for (const n of npcs) {
     const d = Phaser.Math.Distance.Between(player.x, player.y, n.sprite.x, n.sprite.y);
-    if (d < nearestDist) { nearestDist = d; nearestNpc = n; }
+    if (!nearest || d < nearest.dist) nearest = { type: "npc", ref: n, dist: d };
+  }
+  for (const p of portals) {
+    const d = Phaser.Math.Distance.Between(player.x, player.y, p.sprite.x, p.sprite.y);
+    if (!nearest || d < nearest.dist) nearest = { type: "portal", ref: p, dist: d };
   }
 
-  const CAN_TALK_DIST = 90;
-  if (nearestNpc && nearestDist <= CAN_TALK_DIST) {
+  if (nearest && nearest.dist <= CAN_INTERACT_DIST) {
     interactHint?.setVisible(true);
-    interactHint?.setText("SPACE: 대화");
+    interactHint?.setText(nearest.type === "portal" ? "SPACE: 이동" : "SPACE: 대화");
   } else {
     interactHint?.setVisible(false);
   }
 
-  // ===== 연애 지상주의 구역(거리 토스트 + 진입 토스트) =====
+  // LoveZone (차여운 반경)
   const dist = Phaser.Math.Distance.Between(player.x, player.y, cha.x, cha.y);
   const ZONE_RADIUS_PX = 160;
   const PX_PER_M = 32;
   const inLoveZone = dist <= ZONE_RADIUS_PX;
 
-  // LoveZone glow
   if (currentScene?.vignette) currentScene.vignette.setAlpha(inLoveZone ? 0.08 : 0);
 
-  // ...까지 Xm (존 바깥에서만)
+  // 거리 토스트(상단, 짧게) - 예외 규칙
   if (!inLoveZone) {
     const remainingPx = Math.max(0, dist - ZONE_RADIUS_PX);
     const meters = Math.max(1, Math.ceil(remainingPx / PX_PER_M));
@@ -673,59 +852,46 @@ function update() {
         title: "알림",
         icon: "🔔",
         text: `연애 지상주의 구역까지 ${meters}m`,
-        ms: 650
+        ms: 650,
+        position: "top"
       });
     }
   } else {
     state.lastZoneMeters = null;
   }
 
-  // 첫 진입 알림
+  // 진입 토스트(중앙 4초)
   if (inLoveZone && !state.seenLoveZoneIntro) {
     state.seenLoveZoneIntro = true;
-    lastZoneToastAt = Date.now();
-    showToast({
-      title: "알림",
-      icon: "🔔",
-      text: "연애 지상주의 구역이 활성화되었습니다.",
-      ms: 1200
-    });
+    state.lastZoneToastAt = Date.now();
+    showToast({ title: "알림", icon: "🔔", text: "연애 지상주의 구역이 활성화되었습니다." });
   }
 
-  // 페널티(호감도<0 & LoveZone 진입)
+  // 페널티
   if (inLoveZone && state.affection < 0) {
     triggerPenalty("마이너스 호감도로 인해 페널티가 적용됩니다.");
   }
 
-  // 존 안 랜덤 알림(선택)
-  if (inLoveZone) {
-    const now = Date.now();
-    if (state.seenLoveZoneIntro && now - lastZoneToastAt > 5000 && Math.random() < 0.35) {
-      lastZoneToastAt = now;
-      showToast({
-        title: "알림",
-        icon: "🔔",
-        text: "연애 지상주의 구역이 활성화되었습니다.",
-        ms: 900
-      });
-    }
-  }
-
-  // ===== SPACE 상호작용 우선순위: NPC > 세계개변 =====
+  // SPACE 상호작용
   if (Phaser.Input.Keyboard.JustDown(interactKey)) {
     const now = Date.now();
-    if (now - lastNpcInteractAt < 250) return;
+    if (now - lastInteractAt < 250) return;
+    lastInteractAt = now;
 
-    // 1) NPC 대화
-    if (nearestNpc && nearestDist <= CAN_TALK_DIST) {
-      lastNpcInteractAt = now;
-      runScript(nearestNpc.scriptKey);
+    // 1) 포탈
+    if (nearest && nearest.type === "portal" && nearest.dist <= CAN_INTERACT_DIST) {
+      openTravelMenu(nearest.ref.menuTitle, nearest.ref.options);
       return;
     }
 
-    // 2) 차여운 근처면 world_change
+    // 2) NPC
+    if (nearest && nearest.type === "npc" && nearest.dist <= CAN_INTERACT_DIST) {
+      runScript(nearest.ref.scriptKey);
+      return;
+    }
+
+    // 3) 차여운 근처 world_change
     if (dist <= 80) {
-      lastNpcInteractAt = now;
       runScript("world_change");
       return;
     }

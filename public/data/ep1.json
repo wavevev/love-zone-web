@@ -1,24 +1,39 @@
 {
   "prologue_izakaya": [
     { "type": "alert", "title": "이자카야", "text": "갈색 조명이 어둡게 짙은 술집.\n바 테이블엔 나와 선배 둘뿐이다." },
-    { "type": "alert", "title": "명하", "text": "선배, 이 소설 진짜 별로예요." },
-    { "type": "alert", "title": "선배", "text": "그럼 네가 바꿔 줄래?" },
-    { "type": "fadeOut", "ms": 500 },
-    { "type": "teleport", "to": "classroom" },
-    { "type": "fadeIn", "ms": 500 },
-    { "type": "goto", "next": "boot" }
-  ],
+    { "type": "alert", "title": "명하", "text": "선배, 이 소설 진짜 별로예요.\n차여운이 너무 불쌍하잖아요." },
+    { "type": "alert", "title": "선배", "text": "그럼 네가 바꿔 줄래?\n차여운을… 행복하게." },
 
-  "boot": [
+    { "type": "setMainMission", "text": "차여운을 행복하게 만드세요." },
+
+    { "type": "fadeOut", "ms": 600 },
+    { "type": "teleport", "to": "classroom" },
+    { "type": "fadeIn", "ms": 600 },
+
     { "type": "alert", "title": "(알림)", "text": "동기화 중…" },
     { "type": "alert", "title": "(알림)", "text": "이제 자유롭게 움직일 수 있습니다." }
   ],
 
+  "talk_senbae": [
+    { "type": "alert", "title": "선배", "text": "너라면 다르게 쓸 수 있어?" },
+    { "type": "choice", "title": "명하", "text": "뭐라고 대답할까?", "choices": [
+      { "label": "절대 이렇게는 안 써요.", "next": "talk_senbae_a" },
+      { "label": "…그럼 내가 바꿔볼게요.", "next": "talk_senbae_b" }
+    ]}
+  ],
+  "talk_senbae_a": [
+    { "type": "alert", "title": "선배", "text": "그럼 증명해.\n네가 직접." }
+  ],
+  "talk_senbae_b": [
+    { "type": "alert", "title": "선배", "text": "좋아.\n그럼 시작하자." }
+  ],
+
   "hallway_tutorial": [
-    { "type": "alert", "title": "(튜토리얼)", "text": "가까이 가서 SPACE로 NPC와 대화할 수 있습니다." }
+    { "type": "alert", "title": "(튜토리얼)", "text": "가까이 가서 SPACE로 NPC와 대화할 수 있습니다.\n포탈 근처에서는 SPACE로 장소 이동이 가능합니다.\nM키로 미션 목록을 확인할 수 있습니다." }
   ],
 
   "start_find_yeoun": [
+    { "type": "addMission", "id": "find_yeoun", "text": "차여운을 찾으세요." },
     { "type": "setTimer", "seconds": 3000, "label": "제한 시간" },
     { "type": "alert", "title": "명하", "text": "50분… 뛰면 30분.\n가보지 뭐." }
   ],
@@ -43,7 +58,8 @@
     { "type": "alert", "title": "안경훈", "text": "아무 것도 아니라면서 얼굴은 왜 그 모양이냐." }
   ],
   "talk_kyunghoon_b": [
-    { "type": "alert", "title": "안경훈", "text": "차여운? 유명하지.\n근데 오늘 학교 안 나왔을걸." }
+    { "type": "alert", "title": "안경훈", "text": "차여운? 유명하지.\n근데 오늘 학교 안 나왔을걸." },
+    { "type": "completeMission", "id": "find_yeoun" }
   ],
 
   "talk_cheonsangwon": [
