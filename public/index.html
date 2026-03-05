@@ -1,43 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>연애 지상주의 구역</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>LOVE ZONE WEB</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
-  <div id="game"></div>
-  <div id="" class=" hidden">
-  <span class="timerLabel" id="timerLabel">제한 시간</span>
-  <span class="timerValue" id="timerValue">50:00</span>
-</div>
+  <div id="wrap">
+    <div id="game"></div>
 
-  <!-- 🔔 알림 토스트(참고 이미지 느낌) -->
-  <div id="toast" class="toast hidden" role="status" aria-live="polite">
-    <div class="toast-inner">
-      <div class="toast-top">
-        <span class="toast-icon" id="toastIconL">🔔</span>
-        <span class="toast-title" id="toastTitle">알림</span>
-        <span class="toast-icon" id="toastIconR">🔔</span>
-     </div>
-      <div class="toast-line"></div>
-      <div class="toast-text" id="toastText"></div>
+    <!-- Toast -->
+    <div id="toast" class="toast hidden toast-center">
+      <div class="toastRow">
+        <div id="toastIconL" class="toastIcon">🔔</div>
+        <div class="toastBody">
+          <div id="toastTitle" class="toastTitle">알림</div>
+          <div id="toastText" class="toastText">텍스트</div>
+        </div>
+        <div id="toastIconR" class="toastIcon">🔔</div>
+      </div>
     </div>
-  </div>
 
-  <!-- 💬 대화/시스템 창 (쯔꾸르 느낌) -->
-  <div id="box" class="dialog hidden" role="dialog" aria-modal="true">
-    <div class="dialog-frame">
-      <div class="dialog-title" id="boxTitle"></div>
-      <div class="dialog-text" id="boxText"></div>
+    <!-- Timer HUD -->
+    <div id="timerHud" class="timerHud hidden">
+      <div id="timerLabel" class="timerLabel">제한 시간</div>
+      <div id="timerValue" class="timerValue">00:00</div>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="box" class="box hidden">
+      <div id="boxTitle" class="boxTitle"></div>
+      <div id="boxText" class="boxText"></div>
+      <div id="boxChoices" class="boxChoices"></div>
       <div id="boxPrompt" class="boxPrompt hidden">▼</div>
-      <div class="dialog-choices" id="boxChoices"></div>
-      <div class="dialog-hint">[Space] 다음 / 타이핑 스킵 · 선택지는 클릭</div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-  <script src="./game.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>

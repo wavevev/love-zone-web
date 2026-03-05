@@ -1,258 +1,170 @@
-/* =========================================================
-   LOVE ZONE WEB - FULL STYLE.CSS
-   - DungGeunMo font
-   - Toast: centered, fixed width, bg 30% opacity, strong border
-   - Dialogue box: bottom fixed, pixel vibe
-   - Canvas scaling friendly
-   ========================================================= */
-
-/* ---------- Font ---------- */
+/* ===== font ===== */
 @font-face{
   font-family:"DungGeunMo";
-  src:
-    url("./fonts/DungGeunMo.woff2") format("woff2"),
-    url("./fonts/DungGeunMo.woff") format("woff");
-  font-display: swap;
+  src:url("./fonts/DungGeunMo.woff2") format("woff2"),
+      url("./fonts/DungGeunMo.woff") format("woff");
+  font-display:swap;
 }
 
-/* ---------- Base ---------- */
 :root{
-  --bg: #0b0b0f;
-
-  /* Toast look (알림창) */
-  --toast-bg: rgba(0,0,0,0.30);        /* ✅ 배경 30% */
-  --toast-border: rgba(255,255,255,0.95); /* ✅ 테두리는 진하게 */
-  --toast-text: #ffffff;
-
-  /* Dialogue box (대화창) */
-  --box-bg: rgba(0,0,0,0.55);
-  --box-border: rgba(255,255,255,0.95);
-  --box-text: #ffffff;
-
-  --shadow: 0 18px 50px rgba(0,0,0,0.35);
+  --fg:#ffffff;
+  --bg:#000000;
+  --border:#ffffff;
+  --shadow:#000000;
+  --toastBg: rgba(0,0,0,0.30); /* ✅ 배경만 30% */
+  --uiBg: rgba(0,0,0,0.55);
+  --uiBg2: rgba(0,0,0,0.65);
 }
 
-*{ box-sizing: border-box; }
-html, body{
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: var(--bg);
-  color: #fff;
-  font-family: "DungGeunMo", monospace;
-  -webkit-font-smoothing: none; /* 픽셀 느낌 */
-  -moz-osx-font-smoothing: grayscale;
+*{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0;
+  width:100%; height:100%;
+  background:#0b0b0f;
+  color:var(--fg);
+  font-family:"DungGeunMo", monospace;
+  image-rendering: pixelated;
 }
 
-.hidden{ display: none !important; }
+#wrap{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
 
-/* ---------- Game container ---------- */
 #game{
-  width: 100vw;
-  height: 100vh;
+  width:100%;
+  height:100%;
+}
+
+/* ===== Toast ===== */
+.toast{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:9999;
+  min-width: 420px; /* ✅ 가로 안 짧아지게 */
+  max-width: 720px;
+  border:2px solid rgba(255,255,255,1); /* ✅ 테두리는 불투명도 유지 */
+  background: var(--toastBg);            /* ✅ 배경만 30% */
+  padding:10px 12px;
+  box-shadow: 0 4px 0 var(--shadow);
+  border-radius:0;
+  text-align:center; /* ✅ 중앙정렬 */
+}
+
+.toast-center{ top:45%; }
+.toast-top{ top:18px; }
+
+.toastRow{
   display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+
+.toastIcon{
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+
+.toastBody{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
   align-items:center;
   justify-content:center;
 }
 
-/* Phaser canvas pixel vibe */
-canvas{
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+.toastTitle{
+  font-size:18px;
+  letter-spacing:1px;
 }
 
-/* =========================================================
-   TOAST (알림창)
-   - 항상 넓이 고정 → "짧아지는 현상" 방지
-   - 중앙정렬(제목/내용)
-   ========================================================= */
-
-#toast{
-  /* 위치는 JS에서 toast-center / toast-top 클래스로 제어 */
-  z-index: 99999;
-
-  /* ✅ 가로 길이 고정 (짧아지는 문제 해결 핵심) */
-  width: 520px;              /* 필요하면 480~620 사이로 조절 */
-  max-width: min(92vw, 520px);
-
-  background: var(--toast-bg);
-  border: 2px solid var(--toast-border);
-  box-shadow: var(--shadow);
-  border-radius: 0;
-
-  padding: 14px 16px;
-  user-select: none;
-  image-rendering: pixelated;
+.toastText{
+  white-space:pre-line;
+  font-size:18px;
+  line-height:1.25;
 }
 
-/* 중앙/상단 위치 클래스 */
-#toast.toast-center{
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
+.hidden{ display:none !important; }
 
-#toast.toast-top{
-  position: fixed;
-  top: 44px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.toast-top{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.toast-icon{
-  width: 18px;
-  text-align:center;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.toast-title{
-  font-size: 16px;
-  letter-spacing: 0.4px;
-  text-align:center;
-  opacity: 0.95;
-}
-
-.toast-text{
-  white-space: pre-line;
-  font-size: 15px;
-  line-height: 1.35;
-  color: var(--toast-text);
-  text-align: center; /* ✅ 내용 중앙정렬 */
-}
-
-/* =========================================================
-   Dialogue Box (대화창)
-   - 하단 고정
-   - 좌측정렬
-   - 선택지 버튼도 픽셀 느낌
-   ========================================================= */
-
-#box{
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  z-index: 9500;
-
-  width: 860px;
-  max-width: min(94vw, 860px);
-
-  background: var(--box-bg);
-  border: 2px solid var(--box-border);
-  box-shadow: var(--shadow);
-  border-radius: 0;
-
-  padding: 14px 16px;
-}
-
-#boxTitle{
-  font-size: 15px;
-  opacity: 0.9;
-  margin-bottom: 8px;
-}
-
-#boxText{
-  white-space: pre-line;
-  font-size: 16px;
-  line-height: 1.45;
-  color: var(--box-text);
-  text-align: left; /* ✅ 대화는 좌측정렬 */
-  min-height: 70px; /* 대화창 높이 안정 */
-}
-
-#boxChoices{
-  margin-top: 12px;
-  display:flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* 선택지 */
-.choice{
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.35);
-  border: 2px solid rgba(255,255,255,0.90);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.25);
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 1.2;
-}
-
-.choice:hover{
-  background: rgba(255,255,255,0.08);
-}
-
-.choice:active{
-  transform: translateY(1px);
-}
-
-/* =========================================================
-   Timer HUD (우상단)
-   ========================================================= */
-
+/* ===== Timer HUD ===== */
 .timerHud{
-  position: fixed;
-  top: 44px;
-  right: 24px;
-  z-index: 9600;
+  position:absolute;
+  top:18px;
+  right:18px;
+  z-index:9998;
+  border:2px solid rgba(255,255,255,1);
+  background: var(--uiBg);
+  padding:10px 12px;
+  box-shadow: 0 4px 0 var(--shadow);
+  text-align:left;
+  min-width:160px;
+}
+.timerLabel{ font-size:16px; opacity:0.9; margin-bottom:6px; }
+.timerValue{ font-size:20px; }
 
-  width: 220px;
-  max-width: min(45vw, 220px);
+/* ===== Dialogue Box ===== */
+.box{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:18px;
+  width:min(920px, calc(100% - 24px));
+  z-index:9997;
+  border:2px solid rgba(255,255,255,1);
+  background: var(--uiBg2);
+  padding:14px 16px 18px 16px;
+  box-shadow: 0 4px 0 var(--shadow);
+}
 
-  background: rgba(0,0,0,0.30); /* 토스트랑 같은 느낌 */
-  border: 2px solid rgba(255,255,255,0.95);
-  box-shadow: var(--shadow);
-  border-radius: 0;
+.boxTitle{
+  font-size:16px;
+  opacity:0.9;
+  margin-bottom:10px;
+}
 
-  padding: 10px 12px;
+.boxText{
+  font-size:20px;
+  line-height:1.35;
+  white-space:pre-line;
+  min-height: 64px;
+}
+
+.boxChoices{
+  margin-top:12px;
   display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-
-  user-select: none;
-  image-rendering: pixelated;
+  flex-direction:column;
+  gap:10px;
 }
 
-.timerLabel{
-  opacity: 0.85;
-  font-size: 14px;
+.choice{
+  border:2px solid rgba(255,255,255,1);
+  background: rgba(0,0,0,0.35);
+  padding:10px 12px;
+  cursor:pointer;
+  font-size:18px;
+}
+.choice:hover{
+  background: rgba(255,255,255,0.12);
 }
 
-.timerValue{
-  font-size: 16px;
-  letter-spacing: 1px;
-}
-
-/* 모바일 대응(너무 작아지면 box 높이만 줄임) */
-@media (max-width: 520px){
-  #boxText{ min-height: 54px; font-size: 15px; }
-  #toast{ width: 92vw; max-width: 92vw; }
-}
-
-/* ===== Dialogue prompt (▼) ===== */
+/* ▼ 진행 표시 애니메이션 */
 .boxPrompt{
-  margin-top: 6px;
-  text-align: right;
-  font-size: 18px;
-  line-height: 1;
-  opacity: 0.95;
-
-  animation: promptBounce 0.9s infinite steps(2, end);
+  position:absolute;
+  right:16px;
+  bottom:10px;
+  font-size:18px;
+  animation: blink 0.8s steps(1,end) infinite;
 }
-
-@keyframes promptBounce{
-  0%   { transform: translateY(0);   opacity: 0.45; }
-  50%  { transform: translateY(3px); opacity: 1; }
-  100% { transform: translateY(0);   opacity: 0.45; }
+@keyframes blink{
+  0%{ opacity:0; }
+  50%{ opacity:1; }
+  100%{ opacity:0; }
 }
