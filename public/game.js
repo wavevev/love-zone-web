@@ -485,6 +485,11 @@ function preload() {
   this.load.json("ep1", "data/ep1.json");
   this.load.tilemapTiledJSON("map_school", "maps/school.json");
   this.load.image("tiles_school", "tilesets/school_tiles.png");
+  this.load.spritesheet("taemyeongha","images/taemyeongha_sheet.png",{ frameWidth:32, frameHeight:48 });
+  this.load.spritesheet("chayeoun","images/chayeoun_sheet.png",{ frameWidth:32, frameHeight:48 });
+  this.load.spritesheet("cheonsangwon","images/cheonsangwon_sheet.png",{ frameWidth:32, frameHeight:48 });
+  this.load.spritesheet("angyeonghun","images/angyeonghun_sheet.png",{ frameWidth:32, frameHeight:48 });
+  this.load.spritesheet("senbae","images/senbae_sheet.png",{ frameWidth:32, frameHeight:48 });
 }
 
 // ========= Penalty =========
@@ -663,10 +668,16 @@ function create() {
   for (let y = 200; y <= 520; y += 32) walls.create(1700, y, "wall");
 
   // player
-  player = this.physics.add.sprite(spawnPoints.izakaya.x, spawnPoints.izakaya.y, "player");
+  player = this.physics.add.sprite(spawnPoints.izakaya.x, spawnPoints.izakaya.y, "taemyeongha", 0);
+  player.setScale(1); // 필요하면 0.9, 0.8로 더 줄여도 됨
   player.setCollideWorldBounds(true);
-  player.body.setSize(26, 26, true);
+  player.body.setSize(18, 28, true); // 32x48에 맞춰 충돌 박스 작게
   player.setDepth(9999);
+
+  this.anims.create({ key:"walk_down",  frames:this.anims.generateFrameNumbers("taemyeongha",{ start:0, end:2 }), frameRate:10, repeat:-1 });
+  this.anims.create({ key:"walk_left",  frames:this.anims.generateFrameNumbers("taemyeongha",{ start:3, end:5 }), frameRate:10, repeat:-1 });
+  this.anims.create({ key:"walk_right", frames:this.anims.generateFrameNumbers("taemyeongha",{ start:6, end:8 }), frameRate:10, repeat:-1 });
+  this.anims.create({ key:"walk_up",    frames:this.anims.generateFrameNumbers("taemyeongha",{ start:9, end:11}), frameRate:10, repeat:-1 });
 
   // name tag
   const nameTag = this.add.text(player.x - 14, player.y - 42, "명하", {
@@ -677,30 +688,32 @@ function create() {
   }).setDepth(9999);
 
   // cha (옥탑방 쪽)
-  cha = this.physics.add.staticSprite(spawnPoints.rooftop.x, spawnPoints.rooftop.y, "cha").setDepth(9999);
+  cha = this.physics.add.staticSprite(spawnPoints.rooftop.x, spawnPoints.rooftop.y, "chayeoun", 0);
+  cha.setScale(1);
+  cha.setDepth(9999);
 
   // NPCs
   npcs = [];
   const npcTags = [];
 
-  const addNpc = (x, y, name, scriptKey) => {
-    const s = this.physics.add.staticSprite(x, y, "npc").setDepth(9999);
-    const tag = this.add.text(x - 20, y - 42, name, {
-      fontSize: "16px",
-      color: "#ffffff",
-      backgroundColor: "#000000",
-      padding: { x: 4, y: 2 }
-    }).setDepth(9999);
-    npcs.push({ sprite: s, name, scriptKey });
-    npcTags.push({ sprite: s, tag });
-  };
+  const addNpc = (x, y, name, scriptKey, spriteKey="npc") => {
+  const s = this.physics.add.staticSprite(x, y, spriteKey, 0).setDepth(9999);
+  s.setScale(1);
 
-  // ✅ 선배(이자카야)
-  addNpc(420, 360, "선배", "talk_senbae");
+  const tag = this.add.text(x - 20, y - 42, name, {
+    fontSize: "16px",
+    color: "#ffffff",
+    backgroundColor: "#000000",
+    padding: { x: 4, y: 2 }
+  }).setDepth(9999);
 
-  // ✅ 학교 NPC들
-  addNpc(1380, 360, "안경훈", "talk_kyunghoon");
-  addNpc(1560, 360, "천상원", "talk_cheonsangwon");
+  npcs.push({ sprite: s, name, scriptKey });
+  npcTags.push({ sprite: s, tag });
+};
+
+  addNpc(420, 360, "선배", "talk_senbae", "senbae");
+  addNpc(1380, 360, "안경훈", "talk_kyunghoon", "angyeonghun");
+  addNpc(1560, 360, "천상원", "talk_cheonsangwon", "cheonsangwon");
 
   // Portals (장소 이동)
   portals = [];
@@ -948,4 +961,14 @@ function update() {
       return;
     }
   }
+  
+  if (vx === 0 && vy === 0) {
+  player.anims.stop();
+} else {
+  if (Math.abs(vx) > Math.abs(vy)) {
+    player.anims.play(vx > 0 ? "walk_right" : "walk_left", true);
+  } else {
+    player.anims.play(vy > 0 ? "walk_down" : "walk_up", true);
+  }
+}
 }
