@@ -17,6 +17,9 @@ const box = document.getElementById("box");
 const boxTitle = document.getElementById("boxTitle");
 const boxText = document.getElementById("boxText");
 const boxChoices = document.getElementById("boxChoices");
+const boxPrompt = document.getElementById("boxPrompt");
+function showPrompt() { boxPrompt?.classList.remove("hidden"); }
+function hidePrompt() { boxPrompt?.classList.add("hidden"); }
 
 const toast = document.getElementById("toast");
 const toastTitle = document.getElementById("toastTitle");
@@ -56,12 +59,16 @@ function showToast({
 }
 
 // ========= Box =========
-function openBox() { box?.classList.remove("hidden"); }
+function openBox() {
+  box?.classList.remove("hidden");
+  hidePrompt();
+}
 function closeBox() {
   box?.classList.add("hidden");
   if (boxTitle) boxTitle.textContent = "";
   if (boxText) boxText.textContent = "";
   if (boxChoices) boxChoices.innerHTML = "";
+  hidePrompt();
 }
 function renderChoices(choices, onPick) {
   if (!boxChoices) return;
@@ -193,6 +200,7 @@ let locked = false;
 function typeText(fullText) {
   typing = true;
   currentTypingFullText = fullText || "";
+  hidePrompt();
   if (boxText) boxText.textContent = "";
   let i = 0;
 
@@ -204,6 +212,7 @@ function typeText(fullText) {
       clearInterval(typingTimer);
       typingTimer = null;
       typing = false;
+      showPrompt(); // ✅ 문장 다 찍히면 ▼ 표시
     }
   }, TYPE_SPEED_MS);
 }
@@ -262,6 +271,7 @@ function handleCmd(cmd) {
   if (cmd.type === "choice") {
     if (boxTitle) boxTitle.textContent = cmd.title || "(선택)";
     if (boxText) boxText.textContent = cmd.text || "";
+    hidePrompt();           // ✅ 선택지면 ▼ 안 보이게
     renderChoices(cmd.choices || [], (ch) => step(ch.next));
     locked = false;
     return;
@@ -368,6 +378,7 @@ window.addEventListener("keydown", (e) => {
     typingTimer = null;
     typing = false;
     if (boxText) boxText.textContent = currentTypingFullText;
+    showPrompt(); // ✅ 스킵하면 즉시 ▼
     return;
   }
 
@@ -472,6 +483,8 @@ let lastInteractAt = 0;
 
 function preload() {
   this.load.json("ep1", "data/ep1.json");
+  this.load.tilemapTiledJSON("map_school", "maps/school.json");
+  this.load.image("tiles_school", "tilesets/school_tiles.png");
 }
 
 // ========= Penalty =========
@@ -532,6 +545,45 @@ function create() {
     showToast({ title: "알림", icon: "🔔", text: "스크립트 로드 실패" });
     return;
   }
+
+  function create() {
+  currentScene = this;
+
+  // scripts
+  scripts = this.cache.json.get("ep1");
+  if (!scripts) return;
+
+  // ✅ 타일맵 만들기
+  const map = this.make.tilemap({ key: "map_school" });
+
+  // ✅ Tiled에서 tileset 이름이 뭔지 정확히 맞춰야 함
+  // 예: Tiled에서 tileset 이름이 "school_tiles" 라면 아래처럼
+  const tileset = map.addTilesetImage("school_tiles", "tiles_school");
+
+  // ✅ 레이어 만들기 (Tiled 레이어 이름 그대로)
+  const ground = map.createLayer("Ground", tileset, 0, 0);
+  const wallsLayer = map.createLayer("Walls", tileset, 0, 0);
+
+  // ✅ 충돌 (타일 속성 collides=true 로 지정했을 때)
+  wallsLayer.setCollisionByProperty({ collides: true });
+
+  // 월드 크기 = 타일맵 크기
+  this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+  this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+  // 플레이어 생성
+  player = this.physics.add.sprite(200, 200, "player");
+  player.setCollideWorldBounds(true);
+
+  // ✅ 충돌 연결
+  this.physics.add.collider(player, wallsLayer);
+
+  // 카메라
+  this.cameras.main.startFollow(player);
+
+  // 나머지(입력, 스크립트 시작 등) 계속...
+  runScript("prologue_izakaya");
+}
 
   // === runtime textures ===
   const g = this.add.graphics();
